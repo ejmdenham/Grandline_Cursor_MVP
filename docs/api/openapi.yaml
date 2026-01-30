@@ -1,0 +1,117 @@
+openapi: 3.0.3
+info:
+  title: Grandline Races API
+  description: Phase 1 races endpoints. Auth via Cognito JWT (Bearer token).
+  version: 0.1.0
+
+servers:
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com
+    variables:
+      apiId: {}
+      region:
+        default: eu-north-1
+
+security:
+  - bearerAuth: []
+
+paths:
+  /races:
+    get:
+      summary: Get race by invite code
+      operationId: getRaceByInviteCode
+      parameters:
+        - name: inviteCode
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Race found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Race'
+        '401':
+          description: Missing or invalid token
+        '404':
+          description: No race with that invite code
+
+  /races/{id}:
+    get:
+      summary: Get race by id
+      operationId: getRaceById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Race found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Race'
+        '401':
+          description: Missing or invalid token
+        '404':
+          description: No race with that id
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito ID or access token
+
+  schemas:
+    Race:
+      type: object
+      required:
+        - id
+        - name
+        - checkpoints
+        - amot
+        - start_window
+        - invite_code
+        - paid
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        checkpoints:
+          type: array
+          items:
+            type: object
+            required:
+              - order
+              - lat
+              - lng
+            properties:
+              order:
+                type: number
+              lat:
+                type: number
+              lng:
+                type: number
+        amot:
+          type: array
+          items:
+            type: string
+          example: ["run", "bike"]
+        start_window:
+          type: string
+          description: ISO8601 or epoch
+        invite_code:
+          type: string
+        paid:
+          type: boolean
+        created_at:
+          type: string
+        organizer_id:
+          type: string
+          nullable: true

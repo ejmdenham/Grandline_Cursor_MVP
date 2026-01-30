@@ -1,0 +1,7 @@
+# Copy this file to terraform.tfvars and adjust as needed.
+# Do not commit terraform.tfvars (it is in .gitignore).
+
+region                 = "eu-north-1"
+project_name           = "grandline"
+cognito_domain_prefix  = "grandline-player-auth"
+stage                  = "dev"

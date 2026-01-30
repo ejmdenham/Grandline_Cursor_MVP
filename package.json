@@ -5,9 +5,18 @@
     "apps/*",
     "packages/*"
   ],
+  "overrides": {
+    "react-native-screens": "~4.4.0",
+    "react-native-reanimated": "3.16.1",
+    "react-native-gesture-handler": "~2.20.2"
+  },
   "scripts": {
     "lint": "eslint .",
     "format": "prettier --write ."
+  },
+  "dependencies": {
+    "react-native-gesture-handler": "~2.20.2",
+    "react-native-reanimated": "3.16.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.0.0",

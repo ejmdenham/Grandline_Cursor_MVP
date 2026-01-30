@@ -1,0 +1,6 @@
+1. Onboarding Screen
+2. confirmation screen (the email with the confirmation code is sent to the email but there is not confirmation logic on the front or backend)
+
+
+Workflow:
+    We have a stable app. Let's start working in branches per phase & function

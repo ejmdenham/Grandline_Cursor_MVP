@@ -4,6 +4,7 @@
     "slug": "grandline",
     "version": "1.0.0",
     "scheme": "grandline",
+    "newArchEnabled": false,
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "splash": {
