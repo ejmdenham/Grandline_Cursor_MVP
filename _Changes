@@ -4,3 +4,20 @@
 
 Workflow:
     We have a stable app. Let's start working in branches per phase & function
+
+
+GHAs:
+    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/apps/mobile/src/components/DrawerContent.tsx
+    Error:   2:10  error  'View' is defined but never used  @typescript-eslint/no-unused-vars
+
+    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/apps/mobile/src/navigation/types.ts
+    Error:   24:3  error  ES2015 module syntax is preferred over namespaces  @typescript-eslint/no-namespace
+
+    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/apps/mobile/src/screens/SignInScreen.tsx
+    Error:   3:3  error  'View' is defined but never used  @typescript-eslint/no-unused-vars
+
+    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/apps/mobile/src/screens/SignUpScreen.tsx
+    Error:   3:3  error  'View' is defined but never used  @typescript-eslint/no-unused-vars
+
+    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/infra/lambda/races/index.js
+    Error:   34:9  error  'path' is assigned a value but never used  no-unused-vars

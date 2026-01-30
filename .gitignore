@@ -14,4 +14,5 @@ terraform.tfvars
 *.auto.tfvars
 *.tfstate
 *.tfstate.*
+**/.terraform/
 
