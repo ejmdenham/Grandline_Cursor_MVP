@@ -6,3 +6,9 @@ build
 .env
 .env.local
 .DS_Store
+
+.env
+terraform.tfvars
+*.auto.tfvars
+*.tfstate
+*.tfstate.*
