@@ -1,0 +1,21 @@
+Grandline: Real-Time Adventure and Racing in the Real World
+
+Possible Nexus Subsidiary
+​
+Grandline is an innovative, real-time adventure and racing app that brings the excitement of competitive exploration to your fingertips. Designed for thrill-seekers, athletes, and adventurers, Grandline allows users to form teams and participate in dynamic, real-world races and exploration events. With its unique blend of racing, exploration, and team strategy, Grandline is set to revolutionize the way people experience outdoor adventures.
+How It Works:Grandline allows users to form teams and join races that take place in the real world. Each race features specific checkpoints, and teams must navigate through these points using predefined allowed means of transport (AMOT) like running, biking, or boating. Real-time location tracking is integrated into the app, with teams visible as unique colored icons on a digital map, enhancing the competitive and strategic aspects of the race.
+
+Team Dynamics:Grandline fosters a strong sense of community and teamwork. Users can create or join teams, search for nearby adventurers, and add friends, creating a social network similar to popular platforms. Each team has a captain who manages team activities, registers for races, and coordinates strategy. Communication is key, and Grandline offers a built-in chat system with text and voice messaging, ensuring that team members stay connected and aligned during races.
+Race Mechanics:Races are the core of the Grandline experience. Teams compete by navigating to checkpoints using designated modes of transport. Entry fees apply to each race, contributing to a prize pool that is distributed among the winning team members. Real-time tracking during races keeps the competition intense, while location sharing outside of races is customizable based on user preferences.
+
+Race Setup:Organizing a race is seamless and scalable with Grandline’s serverless architecture. Using AWS Lambda functions and Amazon API Gateway, race organizers can easily set up events through a simple online form. This data is stored in DynamoDB, ensuring that race setup is both cost-efficient and highly scalable, accommodating everything from small local events to large-scale adventures.
+
+Financial Transactions:Grandline handles all financial transactions securely and transparently. Entry fees are collected, and prize money is held securely in AWS. Transactions are managed through DynamoDB, ensuring reliability and accuracy. After each race, winnings are automatically distributed among team members unless the captain intervenes within 14 days, adding an extra layer of team coordination and strategy.
+
+Technology Stack:Grandline’s robust infrastructure is built on AWS and managed via Terraform, with a focus on serverless solutions to maximize cost-efficiency and scalability. User authentication and management are handled by Amazon Cognito, ensuring secure and authorized access to race management features.
+
+Legal and Safety:User safety is paramount. Upon signup, all users must agree to a legally binding waiver, which releases Grandline from liability for any injuries or damages incurred while using the app. This waiver emphasizes the importance of personal responsibility and adherence to legal standards during races and explorations.
+User Interaction:During races, interaction is limited to team members, fostering focus and strategic communication. The app’s interface supports real-time tracking of both team and competitor progress, with persistent trails on the map that allow users to analyze routes and make tactical decisions on the go.
+
+Why It Matters:Grandline is more than just a racing app—it’s an adventure platform that combines the thrill of competition with the joy of exploration. By integrating real-world challenges with advanced technology, Grandline offers a unique experience that encourages outdoor activity, teamwork, and strategic thinking. Whether you’re racing to the finish line or exploring new terrain, Grandline provides a seamless, exciting way to engage with the world around you.
+Are you ready to embark on your next great adventure? Join Grandline and turn every race into an epic journey of discovery and competition.
