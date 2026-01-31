@@ -24,6 +24,6 @@ variable "stage" {
 variable "admin_bootstrap_password" {
   description = "Initial password for bootstrap admin user (grandline.mvp@gmail.com). Set out-of-band only; leave empty to skip."
   type        = string
-  default     = ""
+  default     = "123Grandline_MVP"
   sensitive   = true
 }

@@ -13,8 +13,9 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
     return (
       <div style={{ padding: "2rem", textAlign: "center" }}>
         <p>Sign in to access the admin app.</p>
-        <button type="button" onClick={signIn}>
-          Sign in
+        {error && <p style={{ color: "var(--color-error, #b91c1c)", marginBottom: "1rem" }}>{error}</p>}
+        <button type="button" onClick={signIn} disabled={loading}>
+          {loading ? "Redirecting…" : "Sign in"}
         </button>
       </div>
     );

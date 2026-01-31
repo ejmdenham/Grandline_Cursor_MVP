@@ -4,7 +4,7 @@ React + TypeScript + Vite admin app for user and race management. Uses the same 
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and fill in values from Terraform outputs:
+1. **Env:** Run `./scripts/gen-env-admin-web.sh` from repo root (requires player and admin Terraform applied). This writes `apps/web/.env` with the **admin** Cognito client ID — the admin API rejects tokens from other clients (e.g. mobile/player). If you see 401 Unauthorized when calling the API, regenerate env, restart the dev server, and sign out + sign in again.
    - **Player Terraform** (from `infra/terraform`): `cognito_user_pool_id`, `cognito_hosted_ui_domain`
    - **Admin Terraform** (from `infra/terraform_admin`): `admin_api_url`, `admin_cognito_client_id`
    - Set `VITE_COGNITO_HOSTED_UI_PREFIX` to the player output `cognito_hosted_ui_domain` (prefix only).

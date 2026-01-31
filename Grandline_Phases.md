@@ -104,6 +104,24 @@ All artifact locations in this document are relative to the project root.
 
 ---
 
+## Phase 3.5: Admin web hosting (S3 + CloudFront)
+
+**Goal:** Host the admin web app on the internet via S3 and CloudFront (optional; until then, run locally with `npm run dev`).
+
+**Scope:** Set `enable_admin_hosting = true` in admin Terraform; apply admin Terraform to create S3 bucket and CloudFront distribution. Build `apps/web` (`npm run build`), upload contents of `dist/` to the admin S3 bucket, optionally invalidate CloudFront cache. Optional: CI job to build and deploy admin web to S3 + invalidate.
+
+**Reference:** Phase 3 admin app; [infra/terraform_admin/hosting.tf](infra/terraform_admin/hosting.tf) (created when flag is true).
+
+### Assets and artifacts
+
+| Artifact | Location |
+| -------- | -------- |
+| Terraform flag `enable_admin_hosting` | [infra/terraform_admin/variables.tf](infra/terraform_admin/variables.tf) |
+| Runbook or script for build + upload | Optional; or manual `npm run build` then upload `apps/web/dist` to S3 |
+| Optional GitHub Action (build + deploy) | `.github/workflows/` |
+
+---
+
 ## Phase 4: Join Race and Pre-Race Experience
 
 **Goal:** Player can join a race via invite code and see pre-race state on the map.
@@ -216,7 +234,9 @@ flowchart LR
   P0[Phase_0_Foundation] --> P1[Phase_1_Backend_Auth]
   P1 --> P2[Phase_2_App_Shell_Map]
   P2 --> P3[Phase_3_Admin_Webpage]
-  P3 --> P4[Phase_4_Join_PreRace]
+  P3 --> P3_5[Phase_3.5_Admin_Hosting]
+  P3_5 --> P4[Phase_4_Join_PreRace]
+  P3 --> P4
   P4 --> P5[Phase_5_InRace]
   P5 --> P6[Phase_6_PostRace_Leaderboard]
   P6 --> P7[Phase_7_Polish_MVP]

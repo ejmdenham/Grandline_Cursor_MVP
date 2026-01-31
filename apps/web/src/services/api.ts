@@ -31,13 +31,22 @@ export async function fetchRace(id: string, token: string): Promise<Race> {
 }
 
 export async function createRace(race: Omit<Race, "id" | "created_at">, token: string): Promise<Race> {
+  // #region agent log
+  const baseUrl = env.adminApiUrl.replace(/\/$/, "");
+  const fullUrl = `${baseUrl}/admin/races`;
+  fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:createRace-before',message:'createRace before fetch',data:{hasBaseUrl:!!baseUrl,baseUrlLen:baseUrl.length,fullUrl},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+  // #endregion
   const res = await adminFetch("/admin/races", {
     method: "POST",
     body: JSON.stringify(race),
     token,
   });
+  const errBody = !res.ok ? await res.text() : "";
+  // #region agent log
+  fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:createRace-after',message:'createRace after fetch',data:{status:res.status,ok:res.ok,errPreview:errBody.slice(0,200)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1,H3,H4,H5'})}).catch(()=>{});
+  // #endregion
   if (res.status === 403) throw new AdminRequiredError();
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) throw new Error(errBody);
   return res.json();
 }
 

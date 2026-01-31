@@ -1,6 +1,8 @@
 # Admin web app hosting — S3 bucket, CloudFront (OAC), SPA default and error document
+# Only created when enable_admin_hosting = true (Phase 3.5).
 
 resource "aws_s3_bucket" "admin" {
+  count  = var.enable_admin_hosting ? 1 : 0
   bucket = "${var.project_name}-admin-web-${var.stage}"
 
   tags = {
@@ -10,7 +12,8 @@ resource "aws_s3_bucket" "admin" {
 }
 
 resource "aws_s3_bucket_public_access_block" "admin" {
-  bucket = aws_s3_bucket.admin.id
+  count  = var.enable_admin_hosting ? 1 : 0
+  bucket = aws_s3_bucket.admin[0].id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -19,15 +22,17 @@ resource "aws_s3_bucket_public_access_block" "admin" {
 }
 
 resource "aws_cloudfront_origin_access_control" "admin" {
-  name                              = "${var.project_name}-admin-oac-${var.stage}"
-  description                       = "OAC for admin web S3 bucket"
+  count                               = var.enable_admin_hosting ? 1 : 0
+  name                                = "${var.project_name}-admin-oac-${var.stage}"
+  description                         = "OAC for admin web S3 bucket"
   origin_access_control_origin_type = "s3"
-  signing_behavior                 = "always"
-  signing_protocol                  = "sigv4"
+  signing_behavior                   = "always"
+  signing_protocol                    = "sigv4"
 }
 
 resource "aws_s3_bucket_policy" "admin" {
-  bucket = aws_s3_bucket.admin.id
+  count  = var.enable_admin_hosting ? 1 : 0
+  bucket = aws_s3_bucket.admin[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -39,10 +44,10 @@ resource "aws_s3_bucket_policy" "admin" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.admin.arn}/*"
+        Resource = "${aws_s3_bucket.admin[0].arn}/*"
         Condition = {
           StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.admin.arn
+            "AWS:SourceArn" = aws_cloudfront_distribution.admin[0].arn
           }
         }
       }
@@ -53,21 +58,22 @@ resource "aws_s3_bucket_policy" "admin" {
 }
 
 resource "aws_cloudfront_distribution" "admin" {
+  count               = var.enable_admin_hosting ? 1 : 0
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   comment             = "Grandline admin web app"
 
   origin {
-    domain_name              = aws_s3_bucket.admin.bucket_regional_domain_name
-    origin_id                = "S3-${aws_s3_bucket.admin.id}"
-    origin_access_control_id = aws_cloudfront_origin_access_control.admin.id
+    domain_name              = aws_s3_bucket.admin[0].bucket_regional_domain_name
+    origin_id                = "S3-${aws_s3_bucket.admin[0].id}"
+    origin_access_control_id = aws_cloudfront_origin_access_control.admin[0].id
   }
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "S3-${aws_s3_bucket.admin.id}"
+    target_origin_id       = "S3-${aws_s3_bucket.admin[0].id}"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
 

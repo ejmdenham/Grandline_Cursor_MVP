@@ -86,7 +86,7 @@ resource "aws_cognito_user_pool_domain" "main" {
 }
 
 # Admin group — users in this group can use the admin API and web app
-resource "aws_cognito_user_pool_group" "admin" {
+resource "aws_cognito_user_group" "admin" {
   name         = "admin"
   user_pool_id = aws_cognito_user_pool.main.id
 }
@@ -110,6 +110,6 @@ resource "aws_cognito_user_in_group" "bootstrap_admin" {
   count = length(var.admin_bootstrap_password) > 0 ? 1 : 0
 
   user_pool_id = aws_cognito_user_pool.main.id
-  group_name   = aws_cognito_user_pool_group.admin.name
+  group_name   = aws_cognito_user_group.admin.name
   username     = aws_cognito_user.bootstrap_admin[0].username
 }

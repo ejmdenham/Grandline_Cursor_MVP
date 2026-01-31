@@ -2,7 +2,7 @@
 
 resource "aws_cognito_user_pool_client" "admin" {
   name         = "${var.project_name}-admin-web-${var.stage}"
-  user_pool_id = var.cognito_user_pool_id
+  user_pool_id = data.terraform_remote_state.player.outputs.cognito_user_pool_id
 
   generate_secret = false
 

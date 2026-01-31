@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { fetchAuthSession, getCurrentUser, signInWithRedirect, signOut as amplifySignOut } from "aws-amplify/auth";
+import { env } from "@/config/env";
 
 type AuthState = {
   loading: boolean;
@@ -57,8 +58,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, [checkAuth]);
 
-  const signIn = useCallback(() => {
-    (signInWithRedirect as (opts?: Record<string, unknown>) => void)({});
+  const signIn = useCallback(async () => {
+    if (!env.cognitoUserPoolId || !env.cognitoClientId) {
+      setState((s) => ({
+        ...s,
+        loading: false,
+        error:
+          "Cognito is not configured. Add VITE_COGNITO_USER_POOL_ID and VITE_COGNITO_CLIENT_ID to .env (see .env.example).",
+      }));
+      return;
+    }
+    setState((s) => ({ ...s, error: null, loading: true }));
+    try {
+      await signInWithRedirect({});
+    } catch (err) {
+      setState((s) => ({
+        ...s,
+        loading: false,
+        error: err instanceof Error ? err.message : "Sign-in failed",
+      }));
+    }
   }, []);
 
   const signOut = useCallback(async () => {

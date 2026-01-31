@@ -50,7 +50,13 @@ export default function RaceEditPage() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       const token = await getIdToken();
-      if (!token) return;
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:handleSubmit',message:'handleSubmit entry',data:{hasToken:!!token,isNew},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+      // #endregion
+      if (!token) {
+        setError("No token—sign in required");
+        return;
+      }
       setSaving(true);
       setError(null);
       try {
@@ -64,13 +70,22 @@ export default function RaceEditPage() {
           organizer_id: "organizer_id" in race ? race.organizer_id : undefined,
         };
         if (isNew) {
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-call',message:'calling createRace',data:{payloadKeys:Object.keys(payload)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
+          // #endregion
           const created = await createRace(payload, token);
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-success',message:'createRace succeeded',data:{createdId:created?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
+          // #endregion
           navigate(`/races/${created.id}/edit`, { replace: true });
         } else {
           await updateRace((race as Race).id, payload, token);
           setRace((prev) => ({ ...prev, ...payload }));
         }
       } catch (e) {
+        // #region agent log
+        fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-catch',message:'createRace threw',data:{errMsg:(e as Error).message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3,H4,H5'})}).catch(()=>{});
+        // #endregion
         setError((e as Error).message);
       } finally {
         setSaving(false);

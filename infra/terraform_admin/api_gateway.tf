@@ -20,7 +20,7 @@ resource "aws_apigatewayv2_authorizer" "admin" {
 
   jwt_configuration {
     audience = [aws_cognito_user_pool_client.admin.id]
-    issuer   = "https://cognito-idp.${var.region}.amazonaws.com/${var.cognito_user_pool_id}"
+    issuer   = "https://cognito-idp.${var.region}.amazonaws.com/${data.terraform_remote_state.player.outputs.cognito_user_pool_id}"
   }
 }
 

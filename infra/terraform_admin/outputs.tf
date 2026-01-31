@@ -4,8 +4,8 @@ output "admin_api_url" {
 }
 
 output "admin_cloudfront_url" {
-  description = "CloudFront URL for admin web app"
-  value       = "https://${aws_cloudfront_distribution.admin.domain_name}"
+  description = "CloudFront URL for admin web app (N/A when hosting disabled)"
+  value       = var.enable_admin_hosting ? "https://${aws_cloudfront_distribution.admin[0].domain_name}" : "N/A (hosting disabled)"
 }
 
 output "admin_cognito_client_id" {
@@ -14,6 +14,6 @@ output "admin_cognito_client_id" {
 }
 
 output "admin_s3_bucket" {
-  description = "S3 bucket name for admin web app assets"
-  value       = aws_s3_bucket.admin.id
+  description = "S3 bucket name for admin web app assets (empty when hosting disabled)"
+  value       = var.enable_admin_hosting ? aws_s3_bucket.admin[0].id : ""
 }

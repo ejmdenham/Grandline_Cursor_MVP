@@ -46,9 +46,21 @@ exports.handler = async (event) => {
 
   const requestContext = event.requestContext || {};
   const http = requestContext.http || {};
-  const method = http.method;
+  let method = http.method;
+  if (!method && event.routeKey) {
+    const m = String(event.routeKey).match(/^(GET|POST|PUT|DELETE|PATCH)\s/);
+    if (m) method = m[1];
+  }
   const pathParams = event.pathParameters || {};
-  const body = event.body ? JSON.parse(event.body) : {};
+  let body = {};
+  if (event.body && typeof event.body === "string") {
+    try {
+      body = event.body.trim() ? JSON.parse(event.body) : {};
+    } catch (e) {
+      console.error("JSON.parse(body) failed:", e.message);
+      return jsonResponse(400, { error: "Invalid JSON body" });
+    }
+  }
 
   try {
     if (method === "GET" && !pathParams.id) {
@@ -71,16 +83,16 @@ exports.handler = async (event) => {
       const id = uuidv4();
       const created_at = new Date().toISOString();
       const race = {
-        id: id,
+        id,
         name: body.name ?? "",
-        checkpoints: body.checkpoints ?? [],
-        amot: body.amot ?? [],
-        start_window: body.start_window ?? "",
-        invite_code: body.invite_code ?? "",
-        paid: body.paid ?? false,
+        checkpoints: Array.isArray(body.checkpoints) ? body.checkpoints : [],
+        amot: Array.isArray(body.amot) ? body.amot : [],
+        start_window: String(body.start_window ?? ""),
+        invite_code: String(body.invite_code ?? ""),
+        paid: Boolean(body.paid ?? false),
         created_at,
-        organizer_id: body.organizer_id ?? null,
       };
+      if (body.organizer_id != null) race.organizer_id = body.organizer_id;
       await doc.send(
         new PutCommand({
           TableName: TABLE_NAME,
@@ -132,7 +144,7 @@ exports.handler = async (event) => {
 
     return jsonResponse(405, { error: "Method not allowed" });
   } catch (err) {
-    console.error(err);
+    console.error("admin-races Lambda error:", err?.name, err?.message, err?.stack);
     return jsonResponse(500, { error: "Internal server error" });
   }
 };

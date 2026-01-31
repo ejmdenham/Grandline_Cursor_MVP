@@ -59,8 +59,8 @@ resource "aws_iam_role_policy" "lambda_admin_races" {
           "dynamodb:Query"
         ]
         Resource = [
-          var.races_table_arn,
-          "${var.races_table_arn}/index/*"
+          data.terraform_remote_state.player.outputs.races_table_arn,
+          "${data.terraform_remote_state.player.outputs.races_table_arn}/index/*"
         ]
       }
     ]
@@ -77,7 +77,7 @@ resource "aws_lambda_function" "admin_races" {
 
   environment {
     variables = {
-      RACES_TABLE_NAME = var.races_table_name
+      RACES_TABLE_NAME = data.terraform_remote_state.player.outputs.races_table_name
     }
   }
 
@@ -131,7 +131,7 @@ resource "aws_iam_role_policy" "lambda_admin_users" {
           "cognito-idp:AdminDisableUser",
           "cognito-idp:AdminDeleteUser"
         ]
-        Resource = [var.cognito_user_pool_arn]
+        Resource = [data.terraform_remote_state.player.outputs.cognito_user_pool_arn]
       }
     ]
   })
@@ -147,7 +147,7 @@ resource "aws_lambda_function" "admin_users" {
 
   environment {
     variables = {
-      COGNITO_USER_POOL_ID = var.cognito_user_pool_id
+      COGNITO_USER_POOL_ID = data.terraform_remote_state.player.outputs.cognito_user_pool_id
     }
   }
 
