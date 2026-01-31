@@ -31,7 +31,6 @@ exports.handler = async (event) => {
   const requestContext = event.requestContext || {};
   const http = requestContext.http || {};
   const method = http.method;
-  const path = event.rawPath || event.path || "";
   const queryParams = event.queryStringParameters || {};
   const pathParams = event.pathParameters || {};
 
