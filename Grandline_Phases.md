@@ -5,7 +5,7 @@ This document outlines the development phases for Grandline. It references:
 - **[Grandline_Concept.md](Grandline_Concept.md)** — Full product vision: teams, races, serverless backend, payments, waiver, and legal/safety.
 - **[Grandline_Context.md](Grandline_Context.md)** — MVP mobile player app spec: map-first UX, HUD, bottom sheet, drawer, leaderboard, and join flow.
 
-The phases proceed from foundation and tooling, through backend and auth, to the mobile app shell and map-first home, then the full race experience (join, pre-race, in-race, post-race, leaderboard), polish and MVP closure, and finally beyond-MVP features aligned with the Concept.
+The phases proceed from foundation and tooling, through backend and auth, to the mobile app shell and map-first home, then the Admin Webpage and its infrastructure, then the full race experience (join, pre-race, in-race, post-race, leaderboard), polish and MVP closure, and finally beyond-MVP features aligned with the Concept.
 
 ---
 
@@ -17,7 +17,9 @@ All artifact locations in this document are relative to the project root.
 | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `Grandline_Concept.md`, `Grandline_Context.md`, `Grandline_Phases.md` | Project root — concept, context, and this phase plan                                              |
 | `apps/mobile/`                                                        | Player app (e.g. React Native); `apps/mobile/src/` — source; `apps/mobile/assets/` — images/icons |
+| `apps/web/`                                                           | Admin Webpage — user management, race CRUD, expandable                                            |
 | `infra/`                                                              | Terraform / backend-as-code                                                                       |
+| `infra/terraform_admin/`                                              | Admin app infrastructure (hosting, API, auth); separate from player API in `infra/terraform/`      |
 | `packages/`                                                           | Shared types or API spec (optional)                                                               |
 
 ---
@@ -85,7 +87,24 @@ All artifact locations in this document are relative to the project root.
 
 ---
 
-## Phase 3: Join Race and Pre-Race Experience
+## Phase 3: Admin Webpage and Infrastructure
+
+**Goal:** Provide an admin web app to manage users and races, with dedicated infrastructure.
+
+**Scope:** Admin Webpage at **`apps/web/`**: add/remove users (e.g. Cognito user management), create and manage races (CRUD), expandable later (e.g. race participants, settings). Admin infrastructure in **`infra/terraform_admin/`**: Terraform for admin-only resources — e.g. admin API (or routes), admin auth (Cognito group or separate pool), hosting for the web app (e.g. S3 + CloudFront). Keep the folder organized by concern (e.g. `cognito.tf`, `api_gateway.tf`, `hosting.tf`).
+
+**Reference:** Concept — “Race Setup”, “User Interaction”; data model in `docs/data-model.md`, races API in `docs/api/races.md`.
+
+### Assets and artifacts to create at the beginning of Phase 3
+
+| Artifact                                                       | Location                 |
+| -------------------------------------------------------------- | ------------------------ |
+| Admin Webpage app (user management, race CRUD, expandable)     | `apps/web/`              |
+| Admin infra (Terraform: hosting, admin API, admin auth)       | `infra/terraform_admin/` |
+
+---
+
+## Phase 4: Join Race and Pre-Race Experience
 
 **Goal:** Player can join a race via invite code and see pre-race state on the map.
 
@@ -93,7 +112,7 @@ All artifact locations in this document are relative to the project root.
 
 **Reference:** Context — “Join Race Flow”, “Bottom Sheet (Pre-Race)”, “Top Overlay”, “Map Elements (Checkpoints, Finish)”, asset paths for markers/icons.
 
-### Assets and artifacts to create at the beginning of Phase 3
+### Assets and artifacts to create at the beginning of Phase 4
 
 | Artifact                                                             | Location                                                                     |
 | -------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -108,7 +127,7 @@ All artifact locations in this document are relative to the project root.
 
 ---
 
-## Phase 4: In-Race Experience and Checkpoint Detection
+## Phase 5: In-Race Experience and Checkpoint Detection
 
 **Goal:** Full in-race loop: GPS, checkpoint detection, HUD, and bottom sheet.
 
@@ -116,7 +135,7 @@ All artifact locations in this document are relative to the project root.
 
 **Reference:** Context — “Map Behavior”, “Map Elements”, “Top Overlay”, “Bottom Sheet (In-Race)”, “MVP UX Non-Goals” (no other players, no trails in v0).
 
-### Assets and artifacts to create at the beginning of Phase 4
+### Assets and artifacts to create at the beginning of Phase 5
 
 | Artifact                                                                                 | Location                                                        |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
@@ -129,7 +148,7 @@ All artifact locations in this document are relative to the project root.
 
 ---
 
-## Phase 5: Post-Race and Leaderboard
+## Phase 6: Post-Race and Leaderboard
 
 **Goal:** Race end state and leaderboard.
 
@@ -137,7 +156,7 @@ All artifact locations in this document are relative to the project root.
 
 **Reference:** Context — “Bottom Sheet (Post-Race)”, “Leaderboard Screen”.
 
-### Assets and artifacts to create at the beginning of Phase 5
+### Assets and artifacts to create at the beginning of Phase 6
 
 | Artifact                                                                      | Location                                                            |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------- |
@@ -149,7 +168,7 @@ All artifact locations in this document are relative to the project root.
 
 ---
 
-## Phase 6: Polish, Safety, and MVP Closure
+## Phase 7: Polish, Safety, and MVP Closure
 
 **Goal:** Ship-ready MVP player experience.
 
@@ -157,7 +176,7 @@ All artifact locations in this document are relative to the project root.
 
 **Reference:** Context — “Navigation Drawer”, “Join Race Flow” (paid race gating), “Visual Style”, “Asset References”; Concept — “Legal and Safety”.
 
-### Assets and artifacts to create at the beginning of Phase 6
+### Assets and artifacts to create at the beginning of Phase 7
 
 | Artifact                                                                     | Location                                                                                                 |
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -171,22 +190,22 @@ All artifact locations in this document are relative to the project root.
 
 ---
 
-## Phase 7: Beyond MVP (Concept Alignment)
+## Phase 8: Beyond MVP (Concept Alignment)
 
 **Goal:** Move toward full product vision.
 
-**Scope:** Organizer flow (create race, form, API); teams (create/join team, captain); live opponent positions and/or persistent trails (Concept); payments (entry fees, prize pool); deeper social (friends, chat). Order and scope can be refined later.
+**Scope:** Teams (create/join team, captain); live opponent positions and/or persistent trails (Concept); payments (entry fees, prize pool); deeper social (friends, chat). Enhancements to Admin Webpage (e.g. teams, payments) as needed. Order and scope can be refined later.
 
 **Reference:** Concept — “Race Setup”, “Team Dynamics”, “Financial Transactions”, “User Interaction”.
 
-### Assets and artifacts to create at the beginning of Phase 7
+### Assets and artifacts to create at the beginning of Phase 8
 
 | Artifact                                                   | Location                                                        |
 | ---------------------------------------------------------- | --------------------------------------------------------------- |
-| Organizer app scaffold or web form (create race)           | `apps/web/` or `apps/organizer/` (or new app in `apps/`)        |
 | Team data model and API spec (teams, captain, members)     | `docs/api/teams.md` or `packages/api-spec/`, `infra/terraform/` |
 | Payment integration spec or spike (entry fees, prize pool) | `docs/payments.md` or `infra/`                                  |
 | Feature flags or roadmap doc for post-MVP features         | `docs/roadmap.md` or repo config                                |
+| Enhancements to Admin Webpage (e.g. teams, payments)      | `apps/web/`, `infra/terraform_admin/` as needed                |
 
 ---
 
@@ -196,9 +215,10 @@ All artifact locations in this document are relative to the project root.
 flowchart LR
   P0[Phase_0_Foundation] --> P1[Phase_1_Backend_Auth]
   P1 --> P2[Phase_2_App_Shell_Map]
-  P2 --> P3[Phase_3_Join_PreRace]
-  P3 --> P4[Phase_4_InRace]
-  P4 --> P5[Phase_5_PostRace_Leaderboard]
-  P5 --> P6[Phase_6_Polish_MVP]
-  P6 --> P7[Phase_7_Beyond_MVP]
+  P2 --> P3[Phase_3_Admin_Webpage]
+  P3 --> P4[Phase_4_Join_PreRace]
+  P4 --> P5[Phase_5_InRace]
+  P5 --> P6[Phase_6_PostRace_Leaderboard]
+  P6 --> P7[Phase_7_Polish_MVP]
+  P7 --> P8[Phase_8_Beyond_MVP]
 ```
