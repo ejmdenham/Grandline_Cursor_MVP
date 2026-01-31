@@ -20,6 +20,7 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainDrawerParamList>;
 };
 
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace ReactNavigation {
     interface RootParamList extends RootStackParamList {}
