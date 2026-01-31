@@ -8,8 +8,6 @@ build
 .DS_Store
 
 .env
-gen-env.sh
-
 terraform.tfvars
 *.auto.tfvars
 *.tfstate

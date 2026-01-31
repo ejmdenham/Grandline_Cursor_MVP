@@ -132,3 +132,41 @@ export function signUp(email: string, password: string, name?: string): Promise<
     });
   });
 }
+
+/**
+ * Confirm sign-up with the code sent to the user's email.
+ */
+export function confirmSignUp(email: string, code: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: pool,
+    });
+    cognitoUser.confirmRegistration(code, false, (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+/**
+ * Resend the confirmation code to the user's email.
+ */
+export function resendConfirmationCode(email: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: pool,
+    });
+    cognitoUser.resendConfirmationCode((err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}

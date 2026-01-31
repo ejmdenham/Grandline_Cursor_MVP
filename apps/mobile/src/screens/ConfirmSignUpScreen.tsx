@@ -9,29 +9,45 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 import * as auth from '../services/auth';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../navigation/types';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
+type Props = NativeStackScreenProps<AuthStackParamList, 'ConfirmSignUp'>;
 
-export function SignUpScreen({ navigation }: Props) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+export function ConfirmSignUpScreen({ route }: Props) {
+  const { email, password } = route.params;
+  const { setSession } = useAuth();
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
-  const handleSignUp = async () => {
-    if (!email.trim() || !password) return;
+  const handleConfirm = async () => {
+    if (!code.trim()) return;
     setLoading(true);
     try {
-      await auth.signUp(email.trim(), password, name.trim() || undefined);
-      navigation.navigate('ConfirmSignUp', { email: email.trim(), password });
+      await auth.confirmSignUp(email, code.trim());
+      const session = await auth.signIn(email, password);
+      setSession(session);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Sign up failed';
-      Alert.alert('Sign up failed', message);
+      const message = err instanceof Error ? err.message : 'Confirmation failed';
+      Alert.alert('Confirmation failed', message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      await auth.resendConfirmationCode(email);
+      Alert.alert('Code sent', 'Check your email for a new code.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Resend failed';
+      Alert.alert('Resend failed', message);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -40,51 +56,36 @@ export function SignUpScreen({ navigation }: Props) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>Sign up</Text>
+      <Text style={styles.title}>Confirm your email</Text>
+      <Text style={styles.message}>We sent a code to {email}. Enter it below.</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        autoComplete="email"
-        editable={!loading}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password (min 8 chars)"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoComplete="new-password"
-        editable={!loading}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Name (optional)"
-        value={name}
-        onChangeText={setName}
-        autoComplete="name"
+        placeholder="Confirmation code (6 digits)"
+        value={code}
+        onChangeText={setCode}
+        keyboardType="number-pad"
+        maxLength={6}
         editable={!loading}
       />
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleSignUp}
+        onPress={handleConfirm}
         disabled={loading}
       >
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>Sign up</Text>
+          <Text style={styles.buttonText}>Confirm</Text>
         )}
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.link}
-        onPress={() => navigation.navigate('SignIn')}
-        disabled={loading}
+        onPress={handleResend}
+        disabled={loading || resending}
       >
-        <Text style={styles.linkText}>Already have an account? Sign in</Text>
+        <Text style={styles.linkText}>
+          {resending ? 'Sending…' : 'Resend code'}
+        </Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
@@ -100,6 +101,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '600',
+    marginBottom: 24,
+  },
+  message: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 24,
   },
   input: {

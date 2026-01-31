@@ -14,11 +14,23 @@ const getEnv = (key: string): string => {
   return value;
 };
 
+const cognitoUserPoolId = getEnv('EXPO_PUBLIC_COGNITO_USER_POOL_ID');
+const cognitoClientId = getEnv('EXPO_PUBLIC_COGNITO_CLIENT_ID');
+
+if (!cognitoUserPoolId || !cognitoClientId) {
+  const msg =
+    'Missing Cognito config. Set EXPO_PUBLIC_COGNITO_USER_POOL_ID and EXPO_PUBLIC_COGNITO_CLIENT_ID in apps/mobile/.env from Terraform outputs (infra/terraform): terraform output -raw cognito_user_pool_id and terraform output -raw cognito_app_client_id. Restart Expo after changing .env.';
+  if (__DEV__) {
+    console.error('[env]', msg);
+  }
+  throw new Error(msg);
+}
+
 export const env = {
   apiBaseUrl: getEnv('EXPO_PUBLIC_API_BASE_URL').replace(/\/$/, ''),
   cognito: {
-    userPoolId: getEnv('EXPO_PUBLIC_COGNITO_USER_POOL_ID'),
-    clientId: getEnv('EXPO_PUBLIC_COGNITO_CLIENT_ID'),
+    userPoolId: cognitoUserPoolId,
+    clientId: cognitoClientId,
     region: getEnv('EXPO_PUBLIC_COGNITO_REGION') || 'eu-north-1',
     hostedUiUrl: getEnv('EXPO_PUBLIC_COGNITO_HOSTED_UI_URL') || '',
   },

@@ -3,6 +3,7 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 export type AuthStackParamList = {
   SignIn: undefined;
   SignUp: undefined;
+  ConfirmSignUp: { email: string; password: string };
 };
 
 export type MainDrawerParamList = {
