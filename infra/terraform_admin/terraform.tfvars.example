@@ -1,0 +1,17 @@
+# Copy this file to terraform.tfvars and fill in values from player Terraform outputs.
+# Do not commit terraform.tfvars (add to .gitignore if needed).
+#
+# From player Terraform (cd infra/terraform && terraform output):
+#   cognito_user_pool_id   = terraform output -raw cognito_user_pool_id
+#   cognito_user_pool_arn  = terraform output -raw cognito_user_pool_arn
+#   races_table_name       = terraform output -raw races_table_name
+#   races_table_arn        = terraform output -raw races_table_arn
+
+region                 = "eu-north-1"
+project_name           = "grandline"
+stage                  = "dev"
+cognito_user_pool_id   = ""
+cognito_user_pool_arn  = ""
+races_table_name       = ""
+races_table_arn        = ""
+admin_callback_url     = "http://localhost:5173/callback"

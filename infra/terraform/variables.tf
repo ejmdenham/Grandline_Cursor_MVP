@@ -19,3 +19,11 @@ variable "stage" {
   type        = string
   default     = "dev"
 }
+
+# Optional: set via TF_VAR_admin_bootstrap_password or terraform.tfvars (do not commit). Creates grandline.mvp@gmail.com in admin group.
+variable "admin_bootstrap_password" {
+  description = "Initial password for bootstrap admin user (grandline.mvp@gmail.com). Set out-of-band only; leave empty to skip."
+  type        = string
+  default     = ""
+  sensitive   = true
+}

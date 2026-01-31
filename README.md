@@ -14,6 +14,8 @@ Monorepo (npm workspaces):
 - **`infra/`** — Backend and infrastructure as code (Terraform, Lambda)
 - **`docs/`** — API specs and data model
 
+- **`apps/web/`** — Admin web app (React + Vite); user and race management; see [apps/web/README.md](apps/web/README.md).
+
 Optional **`packages/`** for shared types or API spec may be added later. See [Grandline_Phases.md](Grandline_Phases.md) for the assumed directory layout.
 
 ---
@@ -34,9 +36,12 @@ Optional **`packages/`** for shared types or API spec may be added later. See [G
 - **Auth**: User identity and sessions via Cognito.
 - **Races**: Fetch a race by invite code or by id for the player app (join flow and race details).
 
-### What is to come (later phases)
+### Admin (Phase 3)
 
-- **Phase 3+**: Existing API and tables support join flow and pre-race; no new infra called out in Phase 3.
+- **Cognito admin group**: Users in the `admin` group can use the admin web app and admin API. Add the group in [infra/terraform/cognito.tf](infra/terraform/cognito.tf).
+- **Bootstrap admin user**: Optional. Set `admin_bootstrap_password` (sensitive) in Terraform (e.g. `TF_VAR_admin_bootstrap_password` or in `terraform.tfvars`, which must not be committed). If set, Terraform creates user **grandline.mvp@gmail.com** in the `admin` group. The password is set out-of-band only (never store it in the repo). After first apply, Terraform ignores password changes. See [infra/terraform/variables.tf](infra/terraform/variables.tf) and [infra/terraform/cognito.tf](infra/terraform/cognito.tf).
+
+### What is to come (later phases)
 - **Phase 4–5**: In-race and leaderboard may need extra Lambdas or table/GSI (e.g. race results, leaderboard reads).
 - **Phase 6**: Beta Pass / paid-race gating (backend support as needed).
 - **Phase 7 (Beyond MVP)**: Organizer flow (create race, form, API); teams (data model and API); payments (entry fees, prize pool); optional S3 for assets. See Concept: “Race Setup”, “Team Dynamics”, “Financial Transactions”.
@@ -83,3 +88,5 @@ Users can sign up, sign in, and see the map as home; the drawer opens with place
 **Mobile:** Run `./scripts/gen-env.sh` (from repo root, with Terraform outputs available) to write `apps/mobile/.env`. Then `cd apps/mobile && npx expo start` (and run iOS/Android as needed).
 
 **Monorepo:** Always run Expo from `apps/mobile`. The root holds workspaces and version pinning for native modules (e.g. gesture-handler, reanimated).
+
+**Admin (Phase 3):** Deploy order: 1) Apply player Terraform (admin group, optional bootstrap user, outputs). 2) Create admin Terraform vars from player outputs (pool id/ARN, races table name/ARN, admin callback URL). 3) Apply admin Terraform (hosting, API, Lambdas, admin app client). 4) Build and upload `apps/web` (`npm run build --workspace=grandline-admin-web`, then upload `apps/web/dist` to the admin S3 bucket and invalidate CloudFront). See [docs/api/admin.md](docs/api/admin.md).

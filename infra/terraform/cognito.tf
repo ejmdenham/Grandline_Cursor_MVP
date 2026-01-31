@@ -84,3 +84,32 @@ resource "aws_cognito_user_pool_domain" "main" {
   domain       = var.cognito_domain_prefix
   user_pool_id = aws_cognito_user_pool.main.id
 }
+
+# Admin group — users in this group can use the admin API and web app
+resource "aws_cognito_user_pool_group" "admin" {
+  name         = "admin"
+  user_pool_id = aws_cognito_user_pool.main.id
+}
+
+# Optional bootstrap admin user (only created when admin_bootstrap_password is set)
+resource "aws_cognito_user" "bootstrap_admin" {
+  count = length(var.admin_bootstrap_password) > 0 ? 1 : 0
+
+  user_pool_id = aws_cognito_user_pool.main.id
+  username     = "grandline.mvp@gmail.com"
+  password     = var.admin_bootstrap_password
+
+  message_action = "SUPPRESS" # do not send welcome email with temp password
+
+  lifecycle {
+    ignore_changes = [password]
+  }
+}
+
+resource "aws_cognito_user_in_group" "bootstrap_admin" {
+  count = length(var.admin_bootstrap_password) > 0 ? 1 : 0
+
+  user_pool_id = aws_cognito_user_pool.main.id
+  group_name   = aws_cognito_user_pool_group.admin.name
+  username     = aws_cognito_user.bootstrap_admin[0].username
+}

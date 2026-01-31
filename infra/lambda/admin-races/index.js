@@ -1,0 +1,138 @@
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const {
+  DynamoDBDocumentClient,
+  ScanCommand,
+  GetCommand,
+  PutCommand,
+  UpdateCommand,
+  DeleteCommand,
+} = require("@aws-sdk/lib-dynamodb");
+const { v4: uuidv4 } = require("uuid");
+
+const client = new DynamoDBClient({});
+const doc = DynamoDBDocumentClient.from(client);
+
+const TABLE_NAME = process.env.RACES_TABLE_NAME;
+
+const corsHeaders = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "Content-Type,Authorization",
+};
+
+function jsonResponse(statusCode, body, headers = {}) {
+  return {
+    statusCode,
+    headers: { "content-type": "application/json", ...corsHeaders, ...headers },
+    body: JSON.stringify(body),
+  };
+}
+
+function isAdmin(event) {
+  const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
+  const groups = claims["cognito:groups"];
+  if (!groups) return false;
+  const list = Array.isArray(groups) ? groups : (typeof groups === "string" ? groups.split(",") : []);
+  return list.includes("admin");
+}
+
+exports.handler = async (event) => {
+  if (!TABLE_NAME) {
+    return jsonResponse(500, { error: "RACES_TABLE_NAME not set" });
+  }
+
+  if (!isAdmin(event)) {
+    return jsonResponse(403, { error: "Admin required" });
+  }
+
+  const requestContext = event.requestContext || {};
+  const http = requestContext.http || {};
+  const method = http.method;
+  const pathParams = event.pathParameters || {};
+  const body = event.body ? JSON.parse(event.body) : {};
+
+  try {
+    if (method === "GET" && !pathParams.id) {
+      const { Items } = await doc.send(new ScanCommand({ TableName: TABLE_NAME }));
+      return jsonResponse(200, { races: Items || [] });
+    }
+
+    if (method === "GET" && pathParams.id) {
+      const { Item } = await doc.send(
+        new GetCommand({
+          TableName: TABLE_NAME,
+          Key: { id: pathParams.id },
+        })
+      );
+      if (!Item) return jsonResponse(404, { error: "Race not found" });
+      return jsonResponse(200, Item);
+    }
+
+    if (method === "POST" && !pathParams.id) {
+      const id = uuidv4();
+      const created_at = new Date().toISOString();
+      const race = {
+        id: id,
+        name: body.name ?? "",
+        checkpoints: body.checkpoints ?? [],
+        amot: body.amot ?? [],
+        start_window: body.start_window ?? "",
+        invite_code: body.invite_code ?? "",
+        paid: body.paid ?? false,
+        created_at,
+        organizer_id: body.organizer_id ?? null,
+      };
+      await doc.send(
+        new PutCommand({
+          TableName: TABLE_NAME,
+          Item: race,
+        })
+      );
+      return jsonResponse(201, race);
+    }
+
+    if (method === "PUT" && pathParams.id) {
+      const id = pathParams.id;
+      const updates = [];
+      const names = {};
+      const values = {};
+      const allowed = ["name", "checkpoints", "amot", "start_window", "invite_code", "paid", "organizer_id"];
+      for (const key of allowed) {
+        if (body[key] !== undefined) {
+          const alias = `#${key}`;
+          names[alias] = key;
+          values[`:${key}`] = body[key];
+          updates.push(`${alias} = :${key}`);
+        }
+      }
+      if (updates.length === 0) {
+        return jsonResponse(400, { error: "No fields to update" });
+      }
+      const result = await doc.send(
+        new UpdateCommand({
+          TableName: TABLE_NAME,
+          Key: { id },
+          UpdateExpression: "SET " + updates.join(", "),
+          ExpressionAttributeNames: names,
+          ExpressionAttributeValues: values,
+          ReturnValues: "ALL_NEW",
+        })
+      );
+      return jsonResponse(200, result.Attributes);
+    }
+
+    if (method === "DELETE" && pathParams.id) {
+      await doc.send(
+        new DeleteCommand({
+          TableName: TABLE_NAME,
+          Key: { id: pathParams.id },
+        })
+      );
+      return { statusCode: 204, headers: corsHeaders, body: "" };
+    }
+
+    return jsonResponse(405, { error: "Method not allowed" });
+  } catch (err) {
+    console.error(err);
+    return jsonResponse(500, { error: "Internal server error" });
+  }
+};

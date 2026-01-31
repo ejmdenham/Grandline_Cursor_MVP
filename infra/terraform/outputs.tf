@@ -3,6 +3,11 @@ output "cognito_user_pool_id" {
   value       = aws_cognito_user_pool.main.id
 }
 
+output "cognito_user_pool_arn" {
+  description = "Cognito User Pool ARN (for admin Terraform IAM)"
+  value       = aws_cognito_user_pool.main.arn
+}
+
 output "cognito_user_pool_endpoint" {
   description = "Cognito User Pool endpoint"
   value       = aws_cognito_user_pool.main.endpoint
@@ -26,4 +31,9 @@ output "api_base_url" {
 output "races_table_name" {
   description = "DynamoDB races table name"
   value       = aws_dynamodb_table.races.name
+}
+
+output "races_table_arn" {
+  description = "DynamoDB races table ARN (for admin Terraform IAM)"
+  value       = aws_dynamodb_table.races.arn
 }
