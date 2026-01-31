@@ -38,6 +38,28 @@ git push origin main
 
 ---
 
+## If push is rejected (divergent branches)
+
+When the remote has commits you don’t have locally, Git will reject `git push` and may ask how to reconcile branches on `git pull`. Integrate the remote changes, then push.
+
+**Option A – merge (keeps both histories, adds a merge commit):**
+
+```bash
+git pull --no-rebase origin main
+git push origin main
+```
+
+**Option B – rebase (replays your commits on top of remote, linear history):**
+
+```bash
+git pull --rebase origin main
+git push origin main
+```
+
+To set a default for future pulls: `git config pull.rebase false` (merge) or `git config pull.rebase true` (rebase); add `--global` for all repos.
+
+---
+
 ## Clean up after merge
 
 ```bash
@@ -64,5 +86,5 @@ git push origin --delete feature/my-feature-name   # if you pushed the branch
 1. Start from up-to-date main: `git checkout main` then `git pull`
 2. Create feature branch: `git checkout -b feature/something`
 3. Commit on the feature branch; push if using a remote
-4. When done: `git checkout main` → `git merge feature/something` → `git push`
+4. When done: `git checkout main` → `git merge feature/something` → `git push` (if push is rejected, see **If push is rejected (divergent branches)**)
 5. Delete the feature branch locally (and on remote if you pushed it)
