@@ -40,6 +40,9 @@ export default function UsersPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = await getIdToken();
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UsersPage.tsx:handleAdd-entry',message:'handleAdd entry',data:{hasToken:!!token,usernameLen:newEmail.trim().length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
     if (!token || !newEmail.trim()) return;
     setError(null);
     try {
@@ -49,6 +52,9 @@ export default function UsersPage() {
       setShowAdd(false);
       load();
     } catch (e) {
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UsersPage.tsx:handleAdd-catch',message:'createUser threw',data:{errMsg:(e as Error).message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3,H4,H5'})}).catch(()=>{});
+      // #endregion
       setError((e as Error).message);
     }
   };

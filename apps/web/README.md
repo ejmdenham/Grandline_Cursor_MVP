@@ -32,3 +32,8 @@ React + TypeScript + Vite admin app for user and race management. Uses the same 
 
 - **Races**: List, create, edit, delete races.
 - **Users**: List, add, disable, delete Cognito users.
+
+## Troubleshooting
+
+- **403 "Admin required"** — The API received a valid JWT but the user is not in the `admin` Cognito group, or the token is from the wrong client. Fix: (1) Ensure `.env` was generated with `./scripts/gen-env-admin-web.sh` (so `VITE_COGNITO_CLIENT_ID` is the **admin** client ID, not the player one). (2) Ensure the signed-in user is in the Cognito `admin` group (e.g. bootstrap user from player Terraform `admin_bootstrap_password`). (3) Sign out and sign in again after changing env. Check CloudWatch logs for the admin-users/admin-races Lambda to see JWT claim keys when 403 is returned.
+- **500 on race create** — The admin-races Lambda returns the actual error in the response body (`message` / `name`). Redeploy admin Lambdas (`cd infra/terraform_admin && terraform apply`), then try again; the UI or debug logs will show the backend error (e.g. DynamoDB permissions or table name).

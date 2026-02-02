@@ -30,9 +30,33 @@ function jsonResponse(statusCode, body, headers = {}) {
 function isAdmin(event) {
   const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
   const groups = claims["cognito:groups"];
-  if (!groups) return false;
-  const list = Array.isArray(groups) ? groups : (typeof groups === "string" ? groups.split(",") : []);
-  return list.includes("admin");
+  if (!groups) {
+    console.warn("isAdmin: no cognito:groups in JWT claims. Claim keys:", Object.keys(claims).join(","));
+    return false;
+  }
+  // API Gateway HTTP API v2 passes JWT claims as strings; cognito:groups may be "[admin]" or "[admin, users]"
+  let list;
+  if (Array.isArray(groups)) {
+    list = groups;
+  } else if (typeof groups === "string") {
+    // Handle JSON-encoded array string like "[admin]" or "[admin, users]"
+    const trimmed = groups.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        list = JSON.parse(trimmed);
+      } catch {
+        // Fallback: parse as comma-separated inside brackets
+        list = trimmed.slice(1, -1).split(",").map(s => s.trim()).filter(Boolean);
+      }
+    } else {
+      list = trimmed.split(",").map(s => s.trim()).filter(Boolean);
+    }
+  } else {
+    list = [];
+  }
+  const ok = list.includes("admin");
+  if (!ok) console.warn("isAdmin: cognito:groups present but no admin. Groups:", JSON.stringify(list));
+  return ok;
 }
 
 exports.handler = async (event) => {
@@ -145,6 +169,10 @@ exports.handler = async (event) => {
     return jsonResponse(405, { error: "Method not allowed" });
   } catch (err) {
     console.error("admin-races Lambda error:", err?.name, err?.message, err?.stack);
-    return jsonResponse(500, { error: "Internal server error" });
+    return jsonResponse(500, {
+      error: "Internal server error",
+      message: err?.message ?? String(err),
+      name: err?.name ?? "Error",
+    });
   }
 };

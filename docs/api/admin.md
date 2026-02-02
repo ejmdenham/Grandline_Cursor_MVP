@@ -13,7 +13,7 @@ The admin app uses the **admin** Cognito app client (Hosted UI, OAuth code flow)
 
 ## Admin Terraform variables
 
-Admin Terraform (`infra/terraform_admin`) reads **player** Terraform outputs from the player state file via `terraform_remote_state`. Apply **player** Terraform first so `infra/terraform/terraform.tfstate` exists. Player outputs (cognito_user_pool_id, cognito_user_pool_arn, races_table_name, races_table_arn) are loaded automatically; you only set:
+Admin Terraform (`infra/terraform_admin`) reads **player** Terraform outputs from the player state file via `terraform_remote_state`. Apply **player** Terraform first so `infra/terraform/terraform.tfstate` exists. For one-command apply/destroy from repo root use **`./scripts/infra.sh apply`** and **`./scripts/infra.sh destroy`** (destroy runs admin then player). Player outputs (cognito_user_pool_id, cognito_user_pool_arn, races_table_name, races_table_arn) are loaded automatically; you only set:
 
 - `project_name` — resource naming (required)
 - `stage` — deployment stage (default `dev`)

@@ -1,24 +1,14 @@
 1. Onboarding Screen
-2. confirmation screen (the email with the confirmation code is sent to the email but there is not confirmation logic on the front or backend)
-3. 
+2*. confirmation screen (the email with the confirmation code is sent to the email but there is not confirmation logic on the front or backend)
+3. Get Admin WEbpage writing to dynamodb table via API/lambda (currently not working)
 
-
-Workflow:
-    We have a stable app. Let's start working in branches per phase & function
-
+4. Phase 4 — Join Race and Pre-Race Experience (mobile):
+   - Join Race screen: invite code input, validation, races API (get by invite code), navigate to Map on success.
+   - Race context: current race and race state (idle / pre-race / in-race / post-race).
+   - Races service: getRaceByInviteCode, getRaceById (Bearer token from Cognito).
+   - Race types: Race, Checkpoint, RaceState (types/race.ts).
+   - Bottom sheet: collapsible container with peek label; PreRaceContent: race name, mode badges (Run/Bike), start-window countdown, “Start Race” CTA.
+   - Map screen: when race joined, top overlay (race name, 0:00, checkpoint 0/N), checkpoint and finish markers, pre-race bottom sheet.
+   - Placeholder assets: run.svg, bike.svg in assets/icons/; assets.ts comments for marker PNGs.
 
 GHAs:
-    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/apps/mobile/src/components/DrawerContent.tsx
-    Error:   2:10  error  'View' is defined but never used  @typescript-eslint/no-unused-vars
-
-    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/apps/mobile/src/navigation/types.ts
-    Error:   24:3  error  ES2015 module syntax is preferred over namespaces  @typescript-eslint/no-namespace
-
-    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/apps/mobile/src/screens/SignInScreen.tsx
-    Error:   3:3  error  'View' is defined but never used  @typescript-eslint/no-unused-vars
-
-    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/apps/mobile/src/screens/SignUpScreen.tsx
-    Error:   3:3  error  'View' is defined but never used  @typescript-eslint/no-unused-vars
-
-    /home/runner/work/Grandline_Cursor_MVP/Grandline_Cursor_MVP/infra/lambda/races/index.js
-    Error:   34:9  error  'path' is assigned a value but never used  no-unused-vars

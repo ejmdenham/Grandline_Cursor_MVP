@@ -1,18 +1,34 @@
 import { env } from "@/config/env";
 
 const baseUrl = env.adminApiUrl.replace(/\/$/, "");
+const DEBUG_LOG = "http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25";
 
 export async function adminFetch(
   path: string,
   options: RequestInit & { token: string }
 ): Promise<Response> {
   const { token, ...rest } = options;
+  const fullUrl = `${baseUrl}${path}`;
+  // #region agent log
+  fetch(DEBUG_LOG, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "api.ts:adminFetch-entry", message: "adminFetch entry", data: { path, hasToken: !!token, tokenLen: token?.length ?? 0, fullUrl, baseUrlEmpty: !baseUrl }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H1,H2,H3" }) }).catch(() => {});
+  // #endregion
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
     ...options.headers,
   };
-  return fetch(`${baseUrl}${path}`, { ...rest, headers });
+  try {
+    const res = await fetch(fullUrl, { ...rest, headers });
+    // #region agent log
+    fetch(DEBUG_LOG, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "api.ts:adminFetch-after", message: "adminFetch after fetch", data: { path, status: res.status, ok: res.ok }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H3,H5" }) }).catch(() => {});
+    // #endregion
+    return res;
+  } catch (err) {
+    // #region agent log
+    fetch(DEBUG_LOG, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "api.ts:adminFetch-catch", message: "adminFetch fetch threw", data: { path, errMsg: err instanceof Error ? err.message : String(err) }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H3" }) }).catch(() => {});
+    // #endregion
+    throw err;
+  }
 }
 
 export async function fetchRaces(token: string): Promise<{ races: Race[] }> {
@@ -32,9 +48,7 @@ export async function fetchRace(id: string, token: string): Promise<Race> {
 
 export async function createRace(race: Omit<Race, "id" | "created_at">, token: string): Promise<Race> {
   // #region agent log
-  const baseUrl = env.adminApiUrl.replace(/\/$/, "");
-  const fullUrl = `${baseUrl}/admin/races`;
-  fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:createRace-before',message:'createRace before fetch',data:{hasBaseUrl:!!baseUrl,baseUrlLen:baseUrl.length,fullUrl},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+  fetch(DEBUG_LOG, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "api.ts:createRace-before", message: "createRace before fetch", data: { fullUrl: `${baseUrl}/admin/races`, payloadKeys: Object.keys(race) }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H1,H4" }) }).catch(() => {});
   // #endregion
   const res = await adminFetch("/admin/races", {
     method: "POST",
@@ -43,7 +57,7 @@ export async function createRace(race: Omit<Race, "id" | "created_at">, token: s
   });
   const errBody = !res.ok ? await res.text() : "";
   // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:createRace-after',message:'createRace after fetch',data:{status:res.status,ok:res.ok,errPreview:errBody.slice(0,200)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1,H3,H4,H5'})}).catch(()=>{});
+  fetch(DEBUG_LOG, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "api.ts:createRace-after", message: "createRace after fetch", data: { status: res.status, ok: res.ok, errPreview: errBody.slice(0, 200) }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H4,H5" }) }).catch(() => {});
   // #endregion
   if (res.status === 403) throw new AdminRequiredError();
   if (!res.ok) throw new Error(errBody);
@@ -81,13 +95,20 @@ export async function createUser(
   token: string,
   temporaryPassword?: string
 ): Promise<UserSummary> {
+  // #region agent log
+  fetch(DEBUG_LOG, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "api.ts:createUser-before", message: "createUser before fetch", data: { fullUrl: `${baseUrl}/admin/users`, usernameLen: username?.length ?? 0, hasTempPassword: !!temporaryPassword }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H1,H4" }) }).catch(() => {});
+  // #endregion
   const res = await adminFetch("/admin/users", {
     method: "POST",
     body: JSON.stringify({ username, temporaryPassword }),
     token,
   });
+  const errBody = !res.ok ? await res.text() : "";
+  // #region agent log
+  fetch(DEBUG_LOG, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "api.ts:createUser-after", message: "createUser after fetch", data: { status: res.status, ok: res.ok, errPreview: errBody.slice(0, 200) }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H4,H5" }) }).catch(() => {});
+  // #endregion
   if (res.status === 403) throw new AdminRequiredError();
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) throw new Error(errBody);
   return res.json();
 }
 

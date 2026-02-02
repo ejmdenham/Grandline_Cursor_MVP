@@ -11,7 +11,7 @@ export type MainDrawerParamList = {
   Profile: { title?: string };
   ActiveRace: { title?: string };
   Leaderboard: { title?: string };
-  JoinRace: { title?: string };
+  JoinRace: undefined;
   RulesSafety: { title?: string };
   Placeholder: { title: string };
 };

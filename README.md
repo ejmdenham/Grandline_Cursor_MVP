@@ -83,10 +83,10 @@ Users can sign up, sign in, and see the map as home; the drawer opens with place
 
 ## Quick start
 
-**Backend:** From repo root, `cd infra/terraform`, copy `terraform.tfvars.example` to `terraform.tfvars`, run `terraform apply`, and note the outputs.
+**Backend:** From repo root, `cd infra/terraform`, copy `terraform.tfvars.example` to `terraform.tfvars`, run `terraform apply`, and note the outputs. To apply both stacks in order use **`./scripts/infra.sh apply`** (add `-auto-approve` if desired). To destroy both use **`./scripts/infra.sh destroy`** (admin first, then player). Destroying player first breaks admin because it reads player state. **`./scripts/infra.sh plan`** runs plan for both; admin plan only works after the player stack has been applied at least once (admin reads player outputs).
 
 **Mobile:** Run `./scripts/gen-env.sh` (from repo root, with Terraform outputs available) to write `apps/mobile/.env`. Then `cd apps/mobile && npx expo start` (and run iOS/Android as needed).
 
 **Monorepo:** Always run Expo from `apps/mobile`. The root holds workspaces and version pinning for native modules (e.g. gesture-handler, reanimated).
 
-**Admin (Phase 3):** Deploy order: 1) Apply player Terraform (admin group, optional bootstrap user). 2) Set admin Terraform vars (project_name, optionally stage/admin_callback_url); admin reads pool id/ARN and races table name/ARN from player state automatically. 3) Apply admin Terraform (API, Lambdas, admin app client). Admin hosting (S3 + CloudFront) is off by default; run the admin app locally with `npm run dev` in `apps/web`. To host on the web, set `enable_admin_hosting = true` and see Phase 3.5. See [docs/api/admin.md](docs/api/admin.md).
+**Admin (Phase 3):** Deploy order: 1) Apply player Terraform (admin group, optional bootstrap user). 2) Set admin Terraform vars (project_name, optionally stage/admin_callback_url); admin reads pool id/ARN and races table name/ARN from player state automatically. 3) Apply admin Terraform (API, Lambdas, admin app client). One-command from repo root: **`./scripts/infra.sh apply`** and **`./scripts/infra.sh destroy`** (destroy runs admin then player). Admin hosting (S3 + CloudFront) is off by default; run the admin app locally with `npm run dev` in `apps/web`. To host on the web, set `enable_admin_hosting = true` and see Phase 3.5. See [docs/api/admin.md](docs/api/admin.md).

@@ -51,7 +51,7 @@ export default function RaceEditPage() {
       e.preventDefault();
       const token = await getIdToken();
       // #region agent log
-      fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:handleSubmit',message:'handleSubmit entry',data:{hasToken:!!token,isNew},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:handleSubmit',message:'handleSubmit entry',data:{hasToken:!!token,isNew},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
       // #endregion
       if (!token) {
         setError("No token—sign in required");
@@ -71,11 +71,11 @@ export default function RaceEditPage() {
         };
         if (isNew) {
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-call',message:'calling createRace',data:{payloadKeys:Object.keys(payload)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-call',message:'calling createRace',data:{payloadKeys:Object.keys(payload)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
           // #endregion
           const created = await createRace(payload, token);
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-success',message:'createRace succeeded',data:{createdId:created?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-success',message:'createRace succeeded',data:{createdId:created?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
           // #endregion
           navigate(`/races/${created.id}/edit`, { replace: true });
         } else {
@@ -84,7 +84,7 @@ export default function RaceEditPage() {
         }
       } catch (e) {
         // #region agent log
-        fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8f9e-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-catch',message:'createRace threw',data:{errMsg:(e as Error).message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3,H4,H5'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-catch',message:'createRace threw',data:{errMsg:(e as Error).message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3,H4,H5'})}).catch(()=>{});
         // #endregion
         setError((e as Error).message);
       } finally {
