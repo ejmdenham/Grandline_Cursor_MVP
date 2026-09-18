@@ -37,7 +37,7 @@ function ModeBadges({ amot }: { amot: string[] }) {
 }
 
 export function PreRaceContent({ race }: { race: Race }) {
-  const { setRaceState } = useRace();
+  const { startRace } = useRace();
   const [countdown, setCountdown] = useState(formatCountdown(race.start_window));
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export function PreRaceContent({ race }: { race: Race }) {
   }, [race.start_window]);
 
   const onStartRace = () => {
-    setRaceState('in-race');
+    startRace();
   };
 
   return (
