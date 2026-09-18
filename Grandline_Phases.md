@@ -15,7 +15,7 @@ All artifact locations in this document are relative to the project root.
 
 | Path                                                                  | Purpose                                                                                           |
 | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `Grandline_Concept.md`, `Grandline_Context.md`, `Grandline_Phases.md` | Project root — concept, context, and this phase plan                                              |
+| `Grandline_Concept.md`, `Grandline_Context.md`, `Grandline_Design.md`, `Grandline_Phases.md` | Project root — concept, context, design language, and this phase plan                              |
 | `apps/mobile/`                                                        | Player app (e.g. React Native); `apps/mobile/src/` — source; `apps/mobile/assets/` — images/icons |
 | `apps/web/`                                                           | Admin Webpage — user management, race CRUD, expandable                                            |
 | `infra/`                                                              | Terraform / backend-as-code                                                                       |

@@ -142,13 +142,15 @@ No avatars in MVP (names only).
 
 ---
 
-## Visual Style (MVP Guidance)
+## Visual Style
 
-- Clean
-- High contrast
-- Large touch targets
-- Minimal animations
+Source of truth: **[Grandline_Design.md](Grandline_Design.md)** (design language).
+
+Player-app constraints that belong with this UX spec:
+
+- High contrast, large touch targets
 - Avoid visual clutter over the map
+- Motion only for race-state punctuation (start, checkpoint, finish)
 
 ---
 

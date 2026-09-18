@@ -74,7 +74,7 @@ Users can sign up, sign in, and see the map as home; the drawer opens with place
 
 ## Docs and references
 
-- **Product**: [Grandline_Concept.md](Grandline_Concept.md), [Grandline_Context.md](Grandline_Context.md)
+- **Product**: [Grandline_Concept.md](Grandline_Concept.md), [Grandline_Context.md](Grandline_Context.md), [Grandline_Design.md](Grandline_Design.md)
 - **Phases**: [Grandline_Phases.md](Grandline_Phases.md) (dependency flow: P0 → P1 → … → P7)
 - **API**: [docs/api/](docs/api/) (auth, races, OpenAPI)
 - **Data model**: [docs/data-model.md](docs/data-model.md)
