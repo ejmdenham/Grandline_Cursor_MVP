@@ -25,16 +25,18 @@ export const iconPaths = {
 /**
  * Resolve a marker asset. Returns require() result or undefined if missing (safe fallback).
  * Call this at runtime; wrap usage in optional chaining so missing assets don't crash.
- * Once PNGs exist in assets/markers/, add: require('../../assets/markers/user_marker.png') etc.
+ * Placeholder PNGs: add checkpoint_marker.png, finish_marker.png, user_marker.png under
+ * apps/mobile/assets/markers/ then uncomment the require() lines below.
  */
 export const markers: Record<keyof typeof markerPaths, number | undefined> = {
   user: undefined,
   checkpoint: undefined,
   finish: undefined,
 };
-// When asset files exist, replace with:
+// When asset files exist in assets/markers/, use:
 // user: require('../../assets/markers/user_marker.png'),
-// etc., or use a try/catch helper that requires at runtime.
+// checkpoint: require('../../assets/markers/checkpoint_marker.png'),
+// finish: require('../../assets/markers/finish_marker.png'),
 
 /** Icon path strings (SVG). Use with your SVG transformer or component. */
 export const icons = {

@@ -1,6 +1,8 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { MapScreen } from '../screens/MapScreen';
+import { JoinRaceScreen } from '../screens/JoinRaceScreen';
+import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { DrawerContent } from '../components/DrawerContent';
 import type { MainDrawerParamList } from './types';
@@ -29,15 +31,13 @@ export function MainDrawer() {
       />
       <Drawer.Screen
         name="Leaderboard"
-        component={PlaceholderScreen}
-        initialParams={{ title: 'Leaderboard' }}
-        options={{ drawerLabel: 'Leaderboard' }}
+        component={LeaderboardScreen}
+        options={{ title: 'Leaderboard', drawerLabel: 'Leaderboard' }}
       />
       <Drawer.Screen
         name="JoinRace"
-        component={PlaceholderScreen}
-        initialParams={{ title: 'Join race' }}
-        options={{ drawerLabel: 'Join race' }}
+        component={JoinRaceScreen}
+        options={{ title: 'Join race', drawerLabel: 'Join race' }}
       />
       <Drawer.Screen
         name="RulesSafety"

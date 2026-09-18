@@ -5,3 +5,7 @@ region                 = "eu-north-1"
 project_name           = "grandline"
 cognito_domain_prefix  = "grandline-player-auth"
 stage                  = "dev"
+
+# Optional: create bootstrap admin user grandline.mvp@gmail.com in admin group.
+# Set via TF_VAR_admin_bootstrap_password or here; never commit the password.
+# admin_bootstrap_password = "CHANGE_ME"

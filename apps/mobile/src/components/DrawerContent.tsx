@@ -2,12 +2,17 @@ import React from 'react';
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 
 export function DrawerContent(props: DrawerContentComponentProps) {
+  const insets = useSafeAreaInsets();
   const { signOut } = useAuth();
   return (
-    <DrawerContentScrollView {...props} contentContainerStyle={styles.container}>
+    <DrawerContentScrollView
+      {...props}
+      contentContainerStyle={[styles.container, { paddingTop: insets.top + 32 }]}
+    >
       <DrawerItemList {...props} />
       <TouchableOpacity style={styles.logout} onPress={signOut}>
         <Text style={styles.logoutText}>Logout</Text>
@@ -19,7 +24,6 @@ export function DrawerContent(props: DrawerContentComponentProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 8,
   },
   logout: {
     padding: 16,

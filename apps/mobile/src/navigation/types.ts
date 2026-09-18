@@ -10,8 +10,8 @@ export type MainDrawerParamList = {
   Map: undefined;
   Profile: { title?: string };
   ActiveRace: { title?: string };
-  Leaderboard: { title?: string };
-  JoinRace: { title?: string };
+  Leaderboard: { raceId?: string; title?: string };
+  JoinRace: undefined;
   RulesSafety: { title?: string };
   Placeholder: { title: string };
 };
