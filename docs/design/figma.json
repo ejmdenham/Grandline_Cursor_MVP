@@ -1,0 +1,21 @@
+{
+  "figmaFileKey": "EOw4mEooOdLYbd6FGQbPs8",
+  "figmaUrl": "https://www.figma.com/design/EOw4mEooOdLYbd6FGQbPs8/Grandline-UI",
+  "screens": {
+    "Cover": "1:69",
+    "Foundations": "1:81",
+    "Button": "1:206",
+    "Chip": "1:217",
+    "Input": "1:233",
+    "Marker": "1:247",
+    "HUD": "1:269",
+    "Player/Live": "1:272",
+    "Player/Waiting": "1:348",
+    "Player/Finished": "1:373",
+    "Player/Sign in": "1:491",
+    "Player/Join": "1:513",
+    "Player/Leaderboard": "1:529",
+    "Player/Drawer": "1:561",
+    "Admin/Races": "1:621"
+  }
+}
