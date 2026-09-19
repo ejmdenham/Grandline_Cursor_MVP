@@ -121,12 +121,12 @@ Without Lane A, a VM still cannot `terraform plan` locally, tail logs, or run `.
 | --- | --- |
 | `AWS_REGION` | `eu-north-1` |
 | `AWS_ROLE_ARN` | bootstrap `studio_role_arn` (`arn:aws:iam::<account>:role/conductor-studio`) |
-| `AWS_ACCESS_KEY_ID` | from `create-access-key` (your terminal, not chat) |
+| `AWS_ACCESS_KEY_ID` | from `create-access-key` (your terminal, not chat) — must be `AKIA…`, never an `ASIA…` STS snapshot |
 | `AWS_SECRET_ACCESS_KEY` | from `create-access-key` (your terminal, not chat) |
 
-These four stay valid across `./scripts/infra.sh destroy`. Terraform does not manage the access-key pair; destroying the IAM user would invalidate them, which `prevent_destroy` blocks.
+These four stay valid across `./scripts/infra.sh destroy`. Terraform does not manage the access-key pair; destroying the IAM user would invalidate them, which `prevent_destroy` blocks. Do not put a session token or Personal Environment STS values here — workspace setup cannot refresh stolen STS.
 
-**Install software script** (once per computer build):
+**Install software script** (once per computer build; re-paste + **Build computer** only when this file changes):
 
 ```bash
 bash scripts/conductor-cloud-install.sh
@@ -134,22 +134,25 @@ bash scripts/conductor-cloud-install.sh
 
 If the script path is not in the clone during the org install, paste the contents of [scripts/conductor-cloud-install.sh](../../scripts/conductor-cloud-install.sh).
 
-**Repository setup script** (every new Grandline workspace):
+**Repository setup script** (every new Grandline workspace). Saving this field does **not** need a rebuild:
 
 ```bash
 bash scripts/conductor-workspace-setup.sh
 ```
 
-Then **Build computer**. New workspace, in the cloud terminal:
+Setup writes a refreshable assume-role profile (`[conductor-user]` keys + `[default]` `role_arn`), unsets `AWS_ACCESS_KEY_*` so Conductor env vars do not shadow it, inits both Terraform stacks, and generates `apps/mobile/.env` and `apps/web/.env` when outputs exist. Old workspaces keep a frozen session in `~/.conductor-studio-aws.env` — open a **new** workspace after this script changes.
+
+New workspace, in the cloud terminal:
 
 ```bash
+# AWS_ACCESS_KEY_ID should be unset after the hook; ARN must be assumed-role
 aws sts get-caller-identity
 cd infra/terraform && terraform plan
-./scripts/gen-env.sh
+ls apps/mobile/.env apps/web/.env
 gh workflow list
 ```
 
-**Proof:** caller ARN contains `conductor-studio`; `terraform plan` uses remote state; yes/no on `gh workflow run`. Do not paste keys.
+**Proof:** caller ARN contains `assumed-role/conductor-studio` (the IAM user ARN also says `conductor-studio`); `AWS_ACCESS_KEY_ID` unset in the shell; both `.env` files present when stacks are applied; `terraform plan` uses remote state; yes/no on `gh workflow run`. Do not paste keys.
 
 ---
 
