@@ -7,11 +7,13 @@ variable "region" {
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
+  default     = "grandline"
 }
 
 variable "cognito_domain_prefix" {
   description = "Unique prefix for Cognito Hosted UI domain"
   type        = string
+  default     = "grandline-player-auth"
 }
 
 variable "stage" {

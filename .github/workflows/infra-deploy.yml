@@ -75,12 +75,12 @@ jobs:
         if: steps.meta.outputs.player == 'true'
         working-directory: infra/terraform
         run: |
-          terraform init \
+          terraform init -input=false \
             -backend-config="bucket=${{ steps.meta.outputs.backend_bucket }}" \
             -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="dynamodb_table=terraform-locks" \
             -backend-config="encrypt=true"
-          terraform plan -out=tfplan
+          terraform plan -input=false -out=tfplan
 
       - name: Player apply
         if: >
@@ -95,12 +95,12 @@ jobs:
         if: steps.meta.outputs.admin == 'true'
         working-directory: infra/terraform_admin
         run: |
-          terraform init \
+          terraform init -input=false \
             -backend-config="bucket=${{ steps.meta.outputs.backend_bucket }}" \
             -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="dynamodb_table=terraform-locks" \
             -backend-config="encrypt=true"
-          terraform plan -out=tfplan
+          terraform plan -input=false -out=tfplan
 
       - name: Admin apply
         if: >
