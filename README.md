@@ -24,12 +24,13 @@ Optional **`packages/`** for shared types or API spec may be added later. See [G
 
 ### What is there
 
-- **Terraform** ([infra/terraform/](infra/terraform/)): AWS in `eu-north-1`, no remote backend by default.
+- **Terraform** ([infra/terraform/](infra/terraform/)): AWS in `eu-north-1`. Remote state key `grandline/player/terraform.tfstate` in the account bucket `tfstate-<account_id>` (see [docs/runbooks/studio-aws.md](docs/runbooks/studio-aws.md)).
 - **Cognito**: User pool, app client, hosted UI domain. Used for sign up, sign in, and session; the app talks to Cognito directly (no REST auth endpoints).
 - **API Gateway**: HTTP API; base URL is a Terraform output.
 - **Lambda**: Races API in [infra/lambda/races/](infra/lambda/races/) — `GET /races?inviteCode=...` and `GET /races/{id}`; requires Cognito JWT.
 - **DynamoDB**: Races table (id, name, checkpoints, amot, start_window, invite_code, paid, etc.) with GSI `by-invite-code` for the join flow.
 - **Outputs**: Cognito IDs, API base URL, races table name — used by [scripts/gen-env.sh](scripts/gen-env.sh) to generate the mobile app’s `.env`.
+- **Studio AWS**: Conductor agents use an account-wide workshop role (`conductor-studio`). GitHub Actions deploys this repo via OIDC (`grandline-gha-deploy`). Runbook: [docs/runbooks/studio-aws.md](docs/runbooks/studio-aws.md).
 
 ### What it does
 
@@ -78,15 +79,16 @@ Users can sign up, sign in, and see the map as home; the drawer opens with place
 - **Phases**: [Grandline_Phases.md](Grandline_Phases.md) (dependency flow: P0 → P1 → … → P7)
 - **API**: [docs/api/](docs/api/) (auth, races, OpenAPI)
 - **Data model**: [docs/data-model.md](docs/data-model.md)
+- **Studio / AWS**: [docs/runbooks/studio-aws.md](docs/runbooks/studio-aws.md)
 
 ---
 
 ## Quick start
 
-**Backend:** From repo root, `cd infra/terraform`, copy `terraform.tfvars.example` to `terraform.tfvars`, run `terraform apply`, and note the outputs. To apply both stacks in order use **`./scripts/infra.sh apply`** (add `-auto-approve` if desired). To destroy both use **`./scripts/infra.sh destroy`** (admin first, then player). Destroying player first breaks admin because it reads player state. **`./scripts/infra.sh plan`** runs plan for both; admin plan only works after the player stack has been applied at least once (admin reads player outputs).
+**Backend:** Account bootstrap (once): [infra/bootstrap/](infra/bootstrap/) then follow [docs/runbooks/studio-aws.md](docs/runbooks/studio-aws.md). Day to day, from repo root: **`./scripts/infra.sh apply`** (player then admin; add `-auto-approve` if desired). **`./scripts/infra.sh destroy`** (admin then player). **`./scripts/infra.sh plan`** plans both. Admin plan only works after the player stack has been applied at least once (admin reads player outputs from S3).
 
 **Mobile:** Run `./scripts/gen-env.sh` (from repo root, with Terraform outputs available) to write `apps/mobile/.env`. Then `cd apps/mobile && npx expo start` (and run iOS/Android as needed).
 
 **Monorepo:** Always run Expo from `apps/mobile`. The root holds workspaces and version pinning for native modules (e.g. gesture-handler, reanimated).
 
-**Admin (Phase 3):** Deploy order: 1) Apply player Terraform (admin group, optional bootstrap user). 2) Set admin Terraform vars (project_name, optionally stage/admin_callback_url); admin reads pool id/ARN and races table name/ARN from player state automatically. 3) Apply admin Terraform (API, Lambdas, admin app client). One-command from repo root: **`./scripts/infra.sh apply`** and **`./scripts/infra.sh destroy`** (destroy runs admin then player). Admin hosting (S3 + CloudFront) is off by default; run the admin app locally with `npm run dev` in `apps/web`. To host on the web, set `enable_admin_hosting = true` and see Phase 3.5. See [docs/api/admin.md](docs/api/admin.md).
+**Admin (Phase 3):** Deploy order: 1) Apply player Terraform (admin group, optional bootstrap user). 2) Set admin Terraform vars (project_name, optionally stage/admin_callback_url); admin reads pool id/ARN and races table name/ARN from player **S3** state automatically. 3) Apply admin Terraform (API, Lambdas, admin app client). One-command from repo root: **`./scripts/infra.sh apply`** and **`./scripts/infra.sh destroy`** (destroy runs admin then player). Admin hosting (S3 + CloudFront) is off by default; run the admin app locally with `npm run dev` in `apps/web`. To host on the web, set `enable_admin_hosting = true` and see Phase 3.5. See [docs/api/admin.md](docs/api/admin.md).

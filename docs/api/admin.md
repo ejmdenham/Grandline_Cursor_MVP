@@ -13,14 +13,14 @@ The admin app uses the **admin** Cognito app client (Hosted UI, OAuth code flow)
 
 ## Admin Terraform variables
 
-Admin Terraform (`infra/terraform_admin`) reads **player** Terraform outputs from the player state file via `terraform_remote_state`. Apply **player** Terraform first so `infra/terraform/terraform.tfstate` exists. For one-command apply/destroy from repo root use **`./scripts/infra.sh apply`** and **`./scripts/infra.sh destroy`** (destroy runs admin then player). Player outputs (cognito_user_pool_id, cognito_user_pool_arn, races_table_name, races_table_arn) are loaded automatically; you only set:
+Admin Terraform (`infra/terraform_admin`) reads **player** Terraform outputs from the player stack’s S3 state (`grandline/player/terraform.tfstate` in `tfstate-<account_id>`) via `terraform_remote_state`. Apply **player** Terraform first. For one-command apply/destroy from repo root use **`./scripts/infra.sh apply`** and **`./scripts/infra.sh destroy`** (destroy runs admin then player). Player outputs (cognito_user_pool_id, cognito_user_pool_arn, races_table_name, races_table_arn) are loaded automatically; you only set:
 
 - `project_name` — resource naming (required)
 - `stage` — deployment stage (default `dev`)
 - `admin_callback_url` — OAuth callback URL for the admin web app (default `http://localhost:5173/callback`)
 - `enable_admin_hosting` — S3 + CloudFront for the admin web app are **off by default** (run locally with `npm run dev`). Set to `true` to create them; see Phase 3.5 in [Grandline_Phases.md](../../Grandline_Phases.md).
 
-State path: `../terraform/terraform.tfstate` (local backend). If player later uses an S3 backend, switch the `terraform_remote_state` config in [infra/terraform_admin/remote_state.tf](../../infra/terraform_admin/remote_state.tf).
+State: S3 key `grandline/admin/terraform.tfstate` (this stack) reads player outputs from `grandline/player/terraform.tfstate`. See [infra/terraform_admin/remote_state.tf](../../infra/terraform_admin/remote_state.tf) and [docs/runbooks/studio-aws.md](../runbooks/studio-aws.md).
 
 See [infra/terraform_admin/terraform.tfvars.example](../../infra/terraform_admin/terraform.tfvars.example).
 

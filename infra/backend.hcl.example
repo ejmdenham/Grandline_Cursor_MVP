@@ -1,0 +1,9 @@
+# Shared Terraform backend settings for this AWS account.
+# Bucket is tfstate-<account_id> — generate the real file with:
+#   ./scripts/write-backend-hcl.sh
+# Or pass -backend-config flags (scripts/infra.sh does this).
+
+region         = "eu-north-1"
+dynamodb_table = "terraform-locks"
+encrypt        = true
+# bucket = "tfstate-ACCOUNT_ID"

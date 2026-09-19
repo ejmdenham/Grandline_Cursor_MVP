@@ -18,6 +18,12 @@ terraform {
       version = "~> 3.0"
     }
   }
+
+  # Remaining backend settings (bucket, region, lock table) come from
+  # -backend-config (see scripts/infra.sh and infra/backend.hcl.example).
+  backend "s3" {
+    key = "grandline/admin/terraform.tfstate"
+  }
 }
 
 provider "aws" {

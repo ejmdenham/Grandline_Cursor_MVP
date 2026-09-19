@@ -19,14 +19,11 @@ terraform {
     }
   }
 
-  # Optional: move state to S3 for team use. Uncomment and set bucket, key, region; then run terraform init -migrate-state
-  # backend "s3" {
-  #   bucket         = "grandline-terraform-state"
-  #   key            = "phase1/terraform.tfstate"
-  #   region         = "eu-north-1"
-  #   encrypt        = true
-  #   dynamodb_table = "grandline-terraform-locks"
-  # }
+  # Remaining backend settings (bucket, region, lock table) come from
+  # -backend-config (see scripts/infra.sh and infra/backend.hcl.example).
+  backend "s3" {
+    key = "grandline/player/terraform.tfstate"
+  }
 }
 
 provider "aws" {

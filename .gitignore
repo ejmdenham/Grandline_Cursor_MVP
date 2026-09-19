@@ -13,5 +13,7 @@ terraform.tfvars
 *.tfstate
 *.tfstate.*
 **/.terraform/
+infra/backend.hcl
 
 *.txt
+_docs/

@@ -2,7 +2,7 @@
 # Do not commit terraform.tfvars (add to .gitignore if needed).
 #
 # Admin Terraform reads cognito_user_pool_id, cognito_user_pool_arn, races_table_name, races_table_arn
-# from player Terraform state (infra/terraform/terraform.tfstate). Apply player Terraform first.
+# from player S3 state (grandline/player/terraform.tfstate in tfstate-<account_id>). Apply player first.
 
 region             = "eu-north-1"
 project_name       = "grandline"

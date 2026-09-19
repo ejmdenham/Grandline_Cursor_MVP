@@ -1,0 +1,124 @@
+name: Infra deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: Stack to run
+        required: true
+        type: choice
+        options:
+          - player
+          - admin
+          - both
+        default: both
+      apply:
+        description: Apply (allowed only on main)
+        required: true
+        type: boolean
+        default: false
+  pull_request:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - ".github/workflows/infra-deploy.yml"
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - ".github/workflows/infra-deploy.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-north-1
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Resolve backend and stacks
+        id: meta
+        run: |
+          ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+          echo "account_id=${ACCOUNT_ID}" >> "$GITHUB_OUTPUT"
+          echo "backend_bucket=tfstate-${ACCOUNT_ID}" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ] || [ "${{ inputs.stack }}" = "player" ] || [ "${{ inputs.stack }}" = "both" ]; then
+            echo "player=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "player=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ] || [ "${{ inputs.stack }}" = "admin" ] || [ "${{ inputs.stack }}" = "both" ]; then
+            echo "admin=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "admin=false" >> "$GITHUB_OUTPUT"
+          fi
+          aws sts get-caller-identity
+
+      - name: Player init and plan
+        if: steps.meta.outputs.player == 'true'
+        working-directory: infra/terraform
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ steps.meta.outputs.backend_bucket }}" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
+          terraform plan -out=tfplan
+
+      - name: Player apply
+        if: >
+          steps.meta.outputs.player == 'true' &&
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.apply == 'true' &&
+          github.ref == 'refs/heads/main'
+        working-directory: infra/terraform
+        run: terraform apply -auto-approve tfplan
+
+      - name: Admin init and plan
+        if: steps.meta.outputs.admin == 'true'
+        working-directory: infra/terraform_admin
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ steps.meta.outputs.backend_bucket }}" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=terraform-locks" \
+            -backend-config="encrypt=true"
+          terraform plan -out=tfplan
+
+      - name: Admin apply
+        if: >
+          steps.meta.outputs.admin == 'true' &&
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.apply == 'true' &&
+          github.ref == 'refs/heads/main'
+        working-directory: infra/terraform_admin
+        run: terraform apply -auto-approve tfplan
+
+      - name: Player outputs
+        if: steps.meta.outputs.player == 'true'
+        working-directory: infra/terraform
+        run: terraform output
+        continue-on-error: true
+
+      - name: Admin outputs
+        if: steps.meta.outputs.admin == 'true'
+        working-directory: infra/terraform_admin
+        run: terraform output
+        continue-on-error: true

@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+# Do not commit terraform.tfvars.
+
+region      = "eu-north-1"
+github_org  = "YOUR_GITHUB_ORG_OR_USER"
+github_repo = "Grandline"
+
+# If apply fails with EntityAlreadyExists on the OIDC provider:
+# create_github_oidc_provider = false

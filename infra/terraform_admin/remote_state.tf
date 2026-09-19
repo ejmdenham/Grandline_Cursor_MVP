@@ -1,10 +1,15 @@
-# Read player Terraform outputs from player state.
-# Prerequisite: Run "terraform apply" in infra/terraform first so terraform.tfstate exists and
-# includes cognito_user_pool_arn and races_table_arn (Phase 3 outputs). If you see
-# "object does not have an attribute named races_table_arn", re-apply player Terraform.
+# Read player Terraform outputs from shared S3 state in this AWS account.
+# Prerequisite: player stack applied at least once; bootstrap bucket tfstate-<account_id> exists.
+# First-time move from local state: terraform init -migrate-state with the same -backend-config flags
+# (Pilot only — see docs/runbooks/studio-aws.md).
+
+data "aws_caller_identity" "current" {}
+
 data "terraform_remote_state" "player" {
-  backend = "local"
+  backend = "s3"
   config = {
-    path = "${path.module}/../terraform/terraform.tfstate"
+    bucket = "tfstate-${data.aws_caller_identity.current.account_id}"
+    key    = "grandline/player/terraform.tfstate"
+    region = var.region
   }
 }
