@@ -42,6 +42,8 @@ resource "aws_iam_role" "studio" {
     Managed = "conductor-studio-bootstrap"
   }
 
+  max_session_duration = 43200
+
   lifecycle {
     prevent_destroy = true
   }
@@ -49,6 +51,18 @@ resource "aws_iam_role" "studio" {
 
 resource "aws_iam_role_policy_attachment" "studio_admin" {
   role       = aws_iam_role.studio.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# Conductor injects AWS_ACCESS_KEY_ID / SECRET into every shell. Those env vars
+# beat ~/.aws/credentials, so terraform runs as the IAM user, not the role.
+# The user must therefore have the same account access as the role.
+resource "aws_iam_user_policy_attachment" "studio_user_admin" {
+  user       = aws_iam_user.studio.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 
   lifecycle {

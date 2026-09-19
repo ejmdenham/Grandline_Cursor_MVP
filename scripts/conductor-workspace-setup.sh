@@ -52,6 +52,25 @@ export AWS_SESSION_TOKEN="$SESSION_TOKEN"
 export AWS_REGION="$REGION"
 unset AWS_PROFILE || true
 
+ENV_FILE="${HOME}/.conductor-studio-aws.env"
+umask 077
+cat > "$ENV_FILE" <<EOF
+# Written by scripts/conductor-workspace-setup.sh — session, not the IAM user keys.
+export AWS_ACCESS_KEY_ID=${SESSION_KEY}
+export AWS_SECRET_ACCESS_KEY=${SESSION_SECRET}
+export AWS_SESSION_TOKEN=${SESSION_TOKEN}
+export AWS_REGION=${REGION}
+unset AWS_PROFILE
+EOF
+
+PROFILE="${HOME}/.profile"
+MARKER="# conductor-studio-aws"
+if [[ -f "$PROFILE" ]] && grep -q "$MARKER" "$PROFILE"; then
+  :
+else
+  printf '\n%s\n%s\n' "$MARKER" '[ -f "$HOME/.conductor-studio-aws.env" ] && . "$HOME/.conductor-studio-aws.env"' >> "$PROFILE"
+fi
+
 aws sts get-caller-identity
 
 if [[ -d "$REPO_ROOT/infra/terraform" ]] && command -v terraform >/dev/null 2>&1; then
@@ -62,9 +81,9 @@ if [[ -d "$REPO_ROOT/infra/terraform" ]] && command -v terraform >/dev/null 2>&1
     -backend-config="dynamodb_table=terraform-locks"
     -backend-config="encrypt=true"
   )
-  (cd "$REPO_ROOT/infra/terraform" && terraform init "${INIT_ARGS[@]}")
+  (cd "$REPO_ROOT/infra/terraform" && terraform init -reconfigure "${INIT_ARGS[@]}")
   if [[ -d "$REPO_ROOT/infra/terraform_admin" ]]; then
-    (cd "$REPO_ROOT/infra/terraform_admin" && terraform init "${INIT_ARGS[@]}") || true
+    (cd "$REPO_ROOT/infra/terraform_admin" && terraform init -reconfigure "${INIT_ARGS[@]}") || true
   fi
   if [[ -x "$REPO_ROOT/scripts/gen-env.sh" ]]; then
     "$REPO_ROOT/scripts/gen-env.sh" || true
