@@ -48,9 +48,9 @@ terraform output
 
 If apply fails because the GitHub OIDC provider already exists, set `create_github_oidc_provider = false` in `terraform.tfvars` and apply again.
 
-The OIDC provider is `prevent_destroy`. `terraform destroy` in `infra/bootstrap` **errors** instead of deleting it. To destroy studio IAM / bucket / GHA role and leave OIDC in the account: `./scripts/bootstrap-destroy-keep-oidc.sh`. Do not delete the provider in the console.
+The OIDC provider and `conductor-studio` user/role are `prevent_destroy`. `terraform destroy` in `infra/bootstrap` **errors** instead of deleting them. To destroy the state bucket / GHA role and leave OIDC + Conductor identity in the account: `./scripts/bootstrap-destroy-keep-oidc.sh`. Do not delete the provider in the console.
 
-Create the studio access key **once**. Do not paste the secret into chat or git.
+Create the studio access key **once**. Do not paste the secret into chat or git. `conductor-studio` user/role have `prevent_destroy`; player/admin teardown does not delete them or the four Conductor env vars.
 
 ```bash
 aws iam create-access-key --user-name conductor-studio
@@ -120,9 +120,11 @@ Without Lane A, a VM still cannot `terraform plan` locally, tail logs, or run `.
 | Name | Value |
 | --- | --- |
 | `AWS_REGION` | `eu-north-1` |
-| `AWS_ROLE_ARN` | bootstrap `studio_role_arn` |
-| `AWS_ACCESS_KEY_ID` | from `create-access-key` |
-| `AWS_SECRET_ACCESS_KEY` | from `create-access-key` |
+| `AWS_ROLE_ARN` | bootstrap `studio_role_arn` (`arn:aws:iam::<account>:role/conductor-studio`) |
+| `AWS_ACCESS_KEY_ID` | from `create-access-key` (your terminal, not chat) |
+| `AWS_SECRET_ACCESS_KEY` | from `create-access-key` (your terminal, not chat) |
+
+These four stay valid across `./scripts/infra.sh destroy`. Terraform does not manage the access-key pair; destroying the IAM user would invalidate them, which `prevent_destroy` blocks.
 
 **Install software script** (once per computer build):
 

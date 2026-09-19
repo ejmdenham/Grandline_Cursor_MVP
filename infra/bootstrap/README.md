@@ -6,10 +6,14 @@ State for *this* stack stays **local** on the laptop that applies it. Do not mig
 
 Apply is a Pilot step. Follow [docs/runbooks/studio-aws.md](../../docs/runbooks/studio-aws.md).
 
-The GitHub OIDC provider has `lifecycle.prevent_destroy`. A plain `terraform destroy` in this directory **fails** so the provider is not deleted. To tear down studio IAM / state bucket / GHA role and **keep** OIDC:
+The GitHub OIDC provider and `conductor-studio` user/role have `lifecycle.prevent_destroy`. A plain `terraform destroy` in this directory **fails** so Conductor env vars and OIDC stay valid.
+
+`./scripts/infra.sh destroy` only tears down player + admin. It does not touch bootstrap or Conductor keys.
+
+To tear down the state bucket / GHA role and **keep** OIDC + Conductor identity:
 
 ```bash
 ./scripts/bootstrap-destroy-keep-oidc.sh
 ```
 
-Then set `create_github_oidc_provider = false` before any later apply.
+Then set `create_github_oidc_provider = false` before any later apply. Access keys are created with `aws iam create-access-key` and are not Terraform resources.
