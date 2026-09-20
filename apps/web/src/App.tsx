@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthGate } from "@/components/AuthGate";
 import Layout from "@/components/Layout";
 import UsersPage from "@/pages/UsersPage";
 import RacesPage from "@/pages/RacesPage";
@@ -7,25 +8,35 @@ import RaceEditPage from "@/pages/RaceEditPage";
 import CallbackPage from "@/pages/CallbackPage";
 
 function RequireAdmin({ children }: { children: React.ReactNode }) {
-  const { loading, authenticated, isAdmin, error, signIn } = useAuth();
-  if (loading) return <div style={{ padding: "2rem", textAlign: "center" }}>Loading…</div>;
+  const { loading, authenticated, isAdmin, error, signIn, signOut } = useAuth();
+  if (loading) {
+    return (
+      <AuthGate title="Grandline" body="Loading…" />
+    );
+  }
   if (!authenticated) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <p>Sign in to access the admin app.</p>
-        {error && <p style={{ color: "var(--color-error, #b91c1c)", marginBottom: "1rem" }}>{error}</p>}
-        <button type="button" onClick={signIn} disabled={loading}>
-          {loading ? "Redirecting…" : "Sign in"}
-        </button>
-      </div>
+      <AuthGate
+        title="Sign in"
+        body="The admin tool is waiting."
+        error={error}
+        actionLabel={loading ? "Redirecting…" : "Sign in"}
+        onAction={signIn}
+        actionDisabled={loading}
+      />
     );
   }
   if (!isAdmin || error) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <p>Admin access required.</p>
-        <p>{error}</p>
-      </div>
+      <AuthGate
+        title="Admin required"
+        body="This tool is for operators in the admin group."
+        error={error}
+        secondaryLabel="Log out"
+        onSecondary={() => {
+          void signOut();
+        }}
+      />
     );
   }
   return <>{children}</>;

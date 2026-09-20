@@ -20,7 +20,10 @@ export default function UsersPage() {
 
   const load = useCallback(async () => {
     const token = await getIdToken();
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -40,9 +43,6 @@ export default function UsersPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = await getIdToken();
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UsersPage.tsx:handleAdd-entry',message:'handleAdd entry',data:{hasToken:!!token,usernameLen:newEmail.trim().length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
     if (!token || !newEmail.trim()) return;
     setError(null);
     try {
@@ -52,9 +52,6 @@ export default function UsersPage() {
       setShowAdd(false);
       load();
     } catch (e) {
-      // #region agent log
-      fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UsersPage.tsx:handleAdd-catch',message:'createUser threw',data:{errMsg:(e as Error).message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3,H4,H5'})}).catch(()=>{});
-      // #endregion
       setError((e as Error).message);
     }
   };
@@ -83,60 +80,106 @@ export default function UsersPage() {
     }
   };
 
-  if (loading) return <p>Loading users…</p>;
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Users</h1>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
-      <button type="button" onClick={() => setShowAdd(!showAdd)}>
-        {showAdd ? "Cancel" : "Add user"}
-      </button>
+      <div className="page-toolbar">
+        <div className="page-toolbar__copy">
+          <h1>Users</h1>
+          <p>Cognito accounts for the course. Not the race itself.</p>
+        </div>
+        <button
+          type="button"
+          className={showAdd ? "btn btn-ghost" : "btn btn-ember"}
+          onClick={() => setShowAdd(!showAdd)}
+        >
+          {showAdd ? "Cancel" : "Add user"}
+        </button>
+      </div>
+      {error ? <p className="page-status is-error">{error}</p> : null}
       {showAdd && (
-        <form onSubmit={handleAdd} style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "320px" }}>
-          <input
-            type="email"
-            placeholder="Email (username)"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Temporary password (optional)"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-          <button type="submit">Create user</button>
+        <form className="admin-form inline" onSubmit={handleAdd}>
+          <label className="field">
+            Email (username)
+            <input
+              type="email"
+              placeholder="you@course"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              required
+            />
+          </label>
+          <label className="field">
+            Temporary password (optional)
+            <input
+              type="password"
+              placeholder="Leave blank to auto-generate"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </label>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-ember">
+              Create user
+            </button>
+          </div>
         </form>
       )}
-      <table style={{ marginTop: "1.5rem", borderCollapse: "collapse", width: "100%", maxWidth: "600px" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid #ccc" }}>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Email / Username</th>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Status</th>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.username} style={{ borderBottom: "1px solid #eee" }}>
-              <td style={{ padding: "0.5rem" }}>{u.email ?? u.username}</td>
-              <td style={{ padding: "0.5rem" }}>{u.enabled === false ? "Disabled" : u.userStatus ?? "—"}</td>
-              <td style={{ padding: "0.5rem" }}>
-                {u.enabled !== false && (
-                  <button type="button" onClick={() => handleDisable(u.username)} style={{ marginRight: "0.5rem" }}>
-                    Disable
-                  </button>
-                )}
-                <button type="button" onClick={() => handleDelete(u.username)} style={{ color: "crimson" }}>
-                  Delete
-                </button>
-              </td>
+      {loading ? <p className="page-status">Loading users…</p> : null}
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Email / Username</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {users.length === 0 && !loading && <p style={{ marginTop: "1rem" }}>No users.</p>}
+          </thead>
+          <tbody>
+            {!loading && users.length === 0 ? (
+              <tr className="is-empty">
+                <td className="cell-empty" colSpan={3}>
+                  No users.
+                </td>
+              </tr>
+            ) : (
+              users.map((u) => {
+                const disabled = u.enabled === false;
+                const status = disabled ? "Disabled" : u.userStatus ?? "—";
+                return (
+                  <tr key={u.username}>
+                    <td className="cell-name">{u.email ?? u.username}</td>
+                    <td>
+                      <span className={`chip ${disabled ? "chip-disabled" : "chip-waiting"}`}>
+                        {status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        {u.enabled !== false && (
+                          <button
+                            type="button"
+                            className="btn-text stone"
+                            onClick={() => handleDisable(u.username)}
+                          >
+                            Disable
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="btn-text flare"
+                          onClick={() => handleDelete(u.username)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

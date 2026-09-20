@@ -7,6 +7,7 @@ import {
   AdminRequiredError,
   type Race,
 } from "@/services/api";
+import { formatCourse, formatWindow, raceStatus, statusLabel } from "@/theme/format";
 
 export default function RacesPage() {
   const { getIdToken } = useAuth();
@@ -16,7 +17,10 @@ export default function RacesPage() {
 
   const load = useCallback(async () => {
     const token = await getIdToken();
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -45,42 +49,71 @@ export default function RacesPage() {
     }
   };
 
-  if (loading) return <p>Loading races…</p>;
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Races</h1>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
-      <Link to="/races/new" style={{ display: "inline-block", marginBottom: "1rem" }}>
-        New race
-      </Link>
-      <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: "800px" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid #ccc" }}>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Name</th>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Invite code</th>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Start</th>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {races.map((r) => (
-            <tr key={r.id} style={{ borderBottom: "1px solid #eee" }}>
-              <td style={{ padding: "0.5rem" }}>{r.name}</td>
-              <td style={{ padding: "0.5rem" }}>{r.invite_code || "—"}</td>
-              <td style={{ padding: "0.5rem" }}>{r.start_window || "—"}</td>
-              <td style={{ padding: "0.5rem" }}>
-                <Link to={`/races/${r.id}/edit`} style={{ marginRight: "0.5rem" }}>
-                  Edit
-                </Link>
-                <button type="button" onClick={() => handleDelete(r.id, r.name)} style={{ color: "crimson" }}>
-                  Delete
-                </button>
-              </td>
+      <div className="page-toolbar">
+        <div className="page-toolbar__copy">
+          <h1>Races</h1>
+          <p>Create and time the course. Not the race itself.</p>
+        </div>
+        <Link to="/races/new" className="btn btn-ember">
+          Create race
+        </Link>
+      </div>
+      {error ? <p className="page-status is-error">{error}</p> : null}
+      {loading ? <p className="page-status">Loading races…</p> : null}
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Invite</th>
+              <th>Window</th>
+              <th>Course</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {races.length === 0 && !loading && <p style={{ marginTop: "1rem" }}>No races.</p>}
+          </thead>
+          <tbody>
+            {!loading && races.length === 0 ? (
+              <tr className="is-empty">
+                <td className="cell-empty" colSpan={6}>
+                  No races.
+                </td>
+              </tr>
+            ) : (
+              races.map((r) => {
+                const status = raceStatus(r.start_window);
+                return (
+                  <tr key={r.id}>
+                    <td className="cell-name">{r.name}</td>
+                    <td className="cell-meta">{r.invite_code || "—"}</td>
+                    <td className="cell-meta">{formatWindow(r.start_window)}</td>
+                    <td className="cell-meta">{formatCourse(r.checkpoints?.length ?? 0)}</td>
+                    <td>
+                      <span className={`chip chip-${status}`}>{statusLabel[status]}</span>
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        <Link to={`/races/${r.id}/edit`} className="btn-text ember">
+                          Edit
+                        </Link>
+                        <button
+                          type="button"
+                          className="btn-text flare"
+                          onClick={() => handleDelete(r.id, r.name)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
