@@ -1,0 +1,92 @@
+/* Named Grandline roles. Values: Grandline_Design.md. Do not use scaffolding hex. */
+:root {
+  --color-ink: #1c1917;
+  --color-stone: #78716c;
+  --color-dusk: #4a433c;
+  --color-paper: #fafaf9;
+  --color-sand: #f5f0eb;
+  --color-haze: #f0e4d4;
+  --color-clay: #cdb9a2;
+  --color-ember: #e85d04;
+  --color-ember-ink: #fff7ed;
+  --color-mark: #15803d;
+  --color-flare: #c2410c;
+  --color-hairline: #e7e5e4;
+  --color-map-land: #e8dfd4;
+  --color-map-water: #c9d4d0;
+  --color-map-park: #d5dcc8;
+
+  --text-primary: var(--color-ink);
+  --text-secondary: var(--color-stone);
+  --text-on-accent: var(--color-ember-ink);
+  --text-accent: var(--color-ember);
+  --text-success: var(--color-mark);
+  --text-danger: var(--color-flare);
+
+  --bg-page: var(--color-sand);
+  --bg-muted: var(--color-sand);
+  --bg-accent: var(--color-ember);
+  --bg-inverse: var(--color-ink);
+  --bg-surface: var(--color-paper);
+  --bg-canvas: var(--color-haze);
+
+  --border-default: var(--color-hairline);
+  --border-strong: var(--color-dusk);
+  --border-accent: var(--color-ember);
+
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-hud: 12px;
+  --radius-pill: 999px;
+
+  --size-touch: 40px;
+  --size-compact: 32px;
+  --inset-hud: 16px;
+  --inset-sheet: 20px;
+
+  --type-time-size: 40px;
+  --type-time-line: 44px;
+  --type-time-tracking: -1.2px;
+  --type-placement-size: 36px;
+  --type-placement-line: 40px;
+  --type-placement-tracking: -0.8px;
+  --type-title-size: 20px;
+  --type-title-line: 26px;
+  --type-action-size: 16px;
+  --type-action-line: 22px;
+  --type-body-size: 16px;
+  --type-body-line: 22px;
+  --type-caption-size: 13px;
+  --type-caption-line: 18px;
+  --type-overline-size: 11px;
+  --type-overline-line: 14px;
+  --type-overline-tracking: 0.8px;
+  --type-admin-title-size: 18px;
+  --type-admin-title-line: 24px;
+  --type-admin-body-size: 14px;
+  --type-admin-body-line: 20px;
+  --type-admin-meta-size: 12px;
+  --type-admin-meta-line: 16px;
+  --type-regular: 400;
+  --type-semibold: 600;
+  --type-bold: 700;
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --ease-grandline: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --duration-press-in: 80ms;
+  --duration-press-out: 160ms;
+  --duration-focus: 120ms;
+
+  --opacity-hud: 0.82;
+  --opacity-sheet: 0.96;
+  --opacity-press: 0.88;
+}
