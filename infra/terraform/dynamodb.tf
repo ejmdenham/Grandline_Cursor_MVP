@@ -26,3 +26,27 @@ resource "aws_dynamodb_table" "races" {
     Stage   = var.stage
   }
 }
+
+# Race results — see docs/data-model.md. PK race_id, SK user_id. No GSI in Phase 6.
+resource "aws_dynamodb_table" "race_results" {
+  name         = "${var.project_name}-race-results-${var.stage}"
+  billing_mode = "PAY_PER_REQUEST"
+
+  hash_key  = "race_id"
+  range_key = "user_id"
+
+  attribute {
+    name = "race_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  tags = {
+    Project = var.project_name
+    Stage   = var.stage
+  }
+}

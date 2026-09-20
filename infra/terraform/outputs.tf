@@ -37,3 +37,13 @@ output "races_table_arn" {
   description = "DynamoDB races table ARN (for admin Terraform IAM)"
   value       = aws_dynamodb_table.races.arn
 }
+
+output "race_results_table_name" {
+  description = "DynamoDB race results table name"
+  value       = aws_dynamodb_table.race_results.name
+}
+
+output "race_results_table_arn" {
+  description = "DynamoDB race results table ARN"
+  value       = aws_dynamodb_table.race_results.arn
+}

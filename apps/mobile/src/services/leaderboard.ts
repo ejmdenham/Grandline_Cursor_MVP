@@ -6,7 +6,18 @@
 
 import { getSession } from './auth';
 import { env } from '../config/env';
-import type { LeaderboardResult, LeaderboardEntry, LeaderboardEntryStatus } from '../types/leaderboard';
+import type { LeaderboardResult } from '../types/leaderboard';
+import {
+  mapLeaderboardResponse,
+  type ApiLeaderboardResponse,
+} from './resultMap';
+
+export {
+  mapLeaderboardEntry,
+  mapLeaderboardResponse,
+  type ApiLeaderboardEntry,
+  type ApiLeaderboardResponse,
+} from './resultMap';
 
 async function fetchWithAuth(url: string): Promise<Response> {
   const session = await getSession();
@@ -18,25 +29,6 @@ async function fetchWithAuth(url: string): Promise<Response> {
       Authorization: `Bearer ${session.idToken}`,
     },
   });
-}
-
-/** API may return snake_case */
-interface ApiEntry {
-  name: string;
-  status: LeaderboardEntryStatus;
-  finish_time_ms?: number;
-  placement?: number;
-  user_id?: string;
-}
-
-function mapEntry(entry: ApiEntry): LeaderboardEntry {
-  return {
-    name: entry.name,
-    status: entry.status,
-    finishTimeMs: entry.finish_time_ms ?? entry.finishTimeMs,
-    placement: entry.placement,
-    userId: entry.user_id ?? entry.userId,
-  };
 }
 
 /**
@@ -60,19 +52,6 @@ export async function getLeaderboard(raceId: string): Promise<LeaderboardResult>
     const body = await res.text();
     throw new Error(body || `Request failed (${res.status})`);
   }
-  const data = (await res.json()) as {
-    race_id?: string;
-    raceId?: string;
-    race_name?: string;
-    raceName?: string;
-    entries: ApiEntry[];
-  };
-  const raceIdFromApi = data.race_id ?? data.raceId ?? raceId;
-  const raceName = data.race_name ?? data.raceName ?? 'Race';
-  const entries = (data.entries ?? []).map(mapEntry);
-  return {
-    raceId: raceIdFromApi,
-    raceName,
-    entries,
-  };
+  const data = (await res.json()) as ApiLeaderboardResponse;
+  return mapLeaderboardResponse(data, raceId);
 }

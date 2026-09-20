@@ -88,25 +88,12 @@ export function LeaderboardScreen({ route }: Props) {
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : 'Failed to load leaderboard');
-        if (__DEV__) {
-          setResult({
-            raceId,
-            raceName: currentRace?.name ?? 'Race',
-            entries: [
-              { name: 'You', status: 'finished', finishTimeMs: 324000, userId: currentUserId, placement: 1 },
-              { name: 'Runner 2', status: 'finished', finishTimeMs: 330000, placement: 2 },
-              { name: 'Runner 3', status: 'in_progress' },
-              { name: 'Runner 4', status: 'dnf' },
-            ],
-          });
-        } else {
-          setResult(null);
-        }
+        setResult(null);
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [raceId, currentRace?.name, currentUserId]);
+  }, [raceId]);
 
   if (!raceId) {
     return (
@@ -129,7 +116,7 @@ export function LeaderboardScreen({ route }: Props) {
 
   if (error && !result) {
     return (
-      <InstrumentPage title="Leaderboard">
+      <InstrumentPage title="Leaderboard" meta="Could not load">
         <Text style={styles.error}>{error}</Text>
       </InstrumentPage>
     );
@@ -141,7 +128,7 @@ export function LeaderboardScreen({ route }: Props) {
     <InstrumentPage title={data.raceName} meta="Leaderboard">
       <FlatList
         data={data.entries}
-        keyExtractor={(item, index) => `${item.name}-${index}`}
+        keyExtractor={(item, index) => item.userId ?? `${item.name}-${index}`}
         renderItem={({ item, index }) => (
           <LeaderboardRow
             entry={item}
@@ -150,7 +137,7 @@ export function LeaderboardScreen({ route }: Props) {
           />
         )}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={<Text style={styles.empty}>No results yet.</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>No results yet. Start the race to appear.</Text>}
       />
     </InstrumentPage>
   );

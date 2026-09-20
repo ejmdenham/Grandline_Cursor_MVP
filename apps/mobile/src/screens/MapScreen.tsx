@@ -15,6 +15,7 @@ import { CheckpointToast } from '../components/map/CheckpointToast';
 import { FinishMarker, GateMarker, YouMarker } from '../components/map/RaceMarkers';
 import { subscribeToLocation, getCurrentPositionOnce } from '../services/location';
 import { getCheckpointStatus } from '../services/checkpointDetection';
+import { putParticipation } from '../services/participation';
 import { markers } from '../config/assets';
 import { color, motion } from '../theme/tokens';
 import { gateLabel } from '../theme/format';
@@ -64,10 +65,12 @@ export function MapScreen() {
     raceState,
     raceStartTime,
     raceFinishTimeMs,
+    racePlacement,
     completedCheckpointCount,
     setCompletedCheckpointCount,
     setRaceState,
     setRaceFinishTimeMs,
+    setRacePlacement,
   } = useRace();
 
   const hasRace = !!currentRace;
@@ -90,6 +93,7 @@ export function MapScreen() {
   const completedCountRef = useRef(completedCheckpointCount);
   const lastGateAtRef = useRef<number | null>(null);
   const lastMessageRef = useRef<string | null>(null);
+  const finishReportedRef = useRef(false);
   completedCountRef.current = completedCheckpointCount;
 
   const isInRace = raceState === 'in-race';
@@ -128,9 +132,25 @@ export function MapScreen() {
             body: 'Marked. Keep moving.',
           });
         }
-        if (status.completedCount >= checkpoints.length && raceStartTime != null) {
-          setRaceFinishTimeMs(Date.now() - raceStartTime);
+        if (
+          status.completedCount >= checkpoints.length &&
+          raceStartTime != null &&
+          !finishReportedRef.current
+        ) {
+          finishReportedRef.current = true;
+          const finishTimeMs = Date.now() - raceStartTime;
+          setRaceFinishTimeMs(finishTimeMs);
           setRaceState('post-race');
+          void putParticipation(currentRace.id, {
+            status: 'finished',
+            finish_time_ms: finishTimeMs,
+          })
+            .then((result) => {
+              if (result.placement != null) setRacePlacement(result.placement);
+            })
+            .catch((err) => {
+              console.warn('[Race] persist finish failed', err);
+            });
         }
       }
       if (status.completedCount > currentCompleted) {
@@ -151,6 +171,7 @@ export function MapScreen() {
     setCompletedCheckpointCount,
     setRaceState,
     setRaceFinishTimeMs,
+    setRacePlacement,
   ]);
 
   useEffect(() => {
@@ -168,6 +189,7 @@ export function MapScreen() {
     }
     lastMessageRef.current = null;
     lastGateAtRef.current = Date.now();
+    finishReportedRef.current = false;
   }, [isInRace]);
 
   useEffect(() => {
@@ -329,6 +351,7 @@ export function MapScreen() {
         <BottomSheet peekLabel={currentRace.name} expandedHeight={240}>
           <PostRaceContent
             finishTimeMs={raceFinishTimeMs}
+            placement={racePlacement ?? undefined}
             raceId={currentRace.id}
           />
         </BottomSheet>
