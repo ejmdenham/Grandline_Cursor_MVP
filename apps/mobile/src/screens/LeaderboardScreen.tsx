@@ -5,7 +5,6 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
-  useWindowDimensions,
 } from 'react-native';
 import type { DrawerScreenProps } from '@react-navigation/drawer';
 import type { MainDrawerParamList } from '../navigation/types';
@@ -13,22 +12,18 @@ import { useRace } from '../contexts/RaceContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getLeaderboard } from '../services/leaderboard';
 import type { LeaderboardResult, LeaderboardEntry } from '../types/leaderboard';
+import { InstrumentPage } from '../components/ui/InstrumentPage';
+import { color, radius, type } from '../theme/tokens';
+import { formatElapsed } from '../theme/format';
 
 type Props = DrawerScreenProps<MainDrawerParamList, 'Leaderboard'>;
-
-function formatTime(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
 
 function statusLabel(entry: LeaderboardEntry): string {
   switch (entry.status) {
     case 'finished':
-      return entry.finishTimeMs != null ? formatTime(entry.finishTimeMs) : 'Finished';
+      return entry.finishTimeMs != null ? formatElapsed(entry.finishTimeMs) : 'Finished';
     case 'in_progress':
-      return 'In progress';
+      return 'Live';
     case 'dnf':
       return 'DNF';
     default:
@@ -45,16 +40,24 @@ function LeaderboardRow({
   index: number;
   isCurrentUser: boolean;
 }) {
+  const rank = entry.placement ?? index + 1;
   return (
-    <View style={[styles.row, isCurrentUser && styles.rowHighlight]}>
-      <Text style={styles.rank}>{index + 1}</Text>
-      <View style={styles.nameAndStatus}>
-        <Text style={[styles.name, isCurrentUser && styles.nameHighlight]} numberOfLines={1}>
-          {entry.name}
-          {isCurrentUser ? ' (you)' : ''}
-        </Text>
-        <Text style={styles.status}>{statusLabel(entry)}</Text>
-      </View>
+    <View style={[styles.row, isCurrentUser && styles.rowYou]}>
+      {isCurrentUser ? <View style={styles.youBar} /> : null}
+      <Text style={styles.rank}>{rank}</Text>
+      <Text style={styles.name} numberOfLines={1}>
+        {entry.name}
+        {isCurrentUser ? ' · You' : ''}
+      </Text>
+      <Text
+        style={[
+          styles.time,
+          entry.status === 'dnf' && styles.dnf,
+          entry.status === 'finished' && styles.finishedTime,
+        ]}
+      >
+        {statusLabel(entry)}
+      </Text>
     </View>
   );
 }
@@ -64,7 +67,6 @@ export function LeaderboardScreen({ route }: Props) {
   const { currentRace } = useRace();
   const { session } = useAuth();
   const currentUserId = session?.user?.id;
-
   const raceId = raceIdFromParams ?? currentRace?.id ?? null;
 
   const [result, setResult] = useState<LeaderboardResult | null>(null);
@@ -108,42 +110,35 @@ export function LeaderboardScreen({ route }: Props) {
 
   if (!raceId) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.emptyTitle}>No race selected</Text>
-        <Text style={styles.emptySubtitle}>
-          Finish a race or open leaderboard from the post-race screen.
-        </Text>
-      </View>
+      <InstrumentPage title="Leaderboard" meta="No race selected">
+        <Text style={styles.empty}>Finish a race or open this from the sheet.</Text>
+      </InstrumentPage>
     );
   }
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0066cc" />
-        <Text style={styles.loadingText}>Loading leaderboard…</Text>
-      </View>
+      <InstrumentPage title="Leaderboard">
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={color.ember} />
+          <Text style={styles.empty}>Loading leaderboard…</Text>
+        </View>
+      </InstrumentPage>
     );
   }
 
   if (error && !result) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>{error}</Text>
-        <Text style={styles.emptySubtitle}>No results yet for this race.</Text>
-      </View>
+      <InstrumentPage title="Leaderboard">
+        <Text style={styles.error}>{error}</Text>
+      </InstrumentPage>
     );
   }
 
   const data = result!;
-  const { width } = useWindowDimensions();
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.header, { paddingHorizontal: Math.max(20, width * 0.05) }]}>
-        <Text style={styles.title} numberOfLines={1}>{data.raceName}</Text>
-        <Text style={styles.subtitle}>Leaderboard</Text>
-      </View>
+    <InstrumentPage title={data.raceName} meta="Leaderboard">
       <FlatList
         data={data.entries}
         keyExtractor={(item, index) => `${item.name}-${index}`}
@@ -155,42 +150,18 @@ export function LeaderboardScreen({ route }: Props) {
           />
         )}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.center}>
-            <Text style={styles.emptySubtitle}>No results yet.</Text>
-          </View>
-        }
+        ListEmptyComponent={<Text style={styles.empty}>No results yet.</Text>}
       />
-    </View>
+    </InstrumentPage>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-  },
-  header: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
+    gap: 12,
   },
   listContent: {
     paddingBottom: 24,
@@ -198,56 +169,57 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
+    minHeight: 48,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1.5,
+    borderBottomColor: color.dusk,
+    backgroundColor: color.paper,
+    borderRadius: radius.md,
+    marginBottom: 8,
+    overflow: 'hidden',
   },
-  rowHighlight: {
-    backgroundColor: '#e8f0fe',
+  rowYou: {
+    backgroundColor: color.sand,
+  },
+  youBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+    backgroundColor: color.ember,
   },
   rank: {
-    width: 32,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#666',
-  },
-  nameAndStatus: {
-    flex: 1,
-    marginLeft: 12,
+    ...type.action,
+    color: color.dusk,
+    width: 28,
   },
   name: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111',
+    ...type.action,
+    color: color.ink,
+    flex: 1,
   },
-  nameHighlight: {
-    color: '#1967d2',
+  time: {
+    ...type.action,
+    color: color.ink,
+    fontVariant: ['tabular-nums'],
   },
-  status: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+  finishedTime: {
+    color: color.ink,
   },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
+  dnf: {
+    color: color.flare,
   },
-  errorText: {
-    fontSize: 16,
-    color: '#c00',
+  empty: {
+    ...type.body,
+    color: color.stone,
     textAlign: 'center',
+    marginTop: 24,
   },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+  error: {
+    ...type.body,
+    color: color.flare,
+    marginTop: 16,
   },
 });

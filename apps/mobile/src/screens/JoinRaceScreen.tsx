@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRace } from '../contexts/RaceContext';
 import { getRaceByInviteCode } from '../services/races';
+import { Button } from '../components/ui/Button';
+import { Field } from '../components/ui/Field';
+import { InstrumentPage } from '../components/ui/InstrumentPage';
 
 export function JoinRaceScreen() {
   const [inviteCode, setInviteCode] = useState('');
@@ -44,88 +38,29 @@ export function JoinRaceScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.content}>
-        <Text style={styles.label}>Invite code</Text>
-        <TextInput
-          style={[styles.input, error ? styles.inputError : null]}
+    <InstrumentPage title="Join race" meta="Invite code">
+      <View style={styles.field}>
+        <Field
           value={inviteCode}
           onChangeText={(text) => {
             setInviteCode(text.toUpperCase());
             if (error) setError(null);
           }}
-          placeholder="e.g. ABC123"
-          placeholderTextColor="#888"
+          placeholder="ABC123"
           autoCapitalize="characters"
           autoCorrect={false}
           editable={!loading}
           maxLength={20}
+          error={error}
         />
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        <TouchableOpacity
-          style={[styles.button, loading ? styles.buttonDisabled : null]}
-          onPress={handleJoin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Join race</Text>
-          )}
-        </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+      <Button label="Join" kind="ember" onPress={handleJoin} loading={loading} />
+    </InstrumentPage>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 2,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 14,
-    fontSize: 18,
-    marginBottom: 8,
-  },
-  inputError: {
-    borderColor: '#c00',
-  },
-  error: {
-    color: '#c00',
-    fontSize: 14,
-    marginBottom: 12,
-  },
-  button: {
-    backgroundColor: '#0066cc',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  field: {
+    marginBottom: 16,
   },
 });

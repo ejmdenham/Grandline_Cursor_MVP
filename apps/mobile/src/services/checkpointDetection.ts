@@ -30,6 +30,19 @@ function toRad(deg: number): number {
   return (deg * Math.PI) / 180;
 }
 
+export function courseLengthMeters(
+  checkpoints: { lat: number; lng: number }[]
+): number {
+  if (checkpoints.length < 2) return 0;
+  let total = 0;
+  for (let i = 1; i < checkpoints.length; i += 1) {
+    const prev = checkpoints[i - 1];
+    const next = checkpoints[i];
+    total += haversineDistanceMeters(prev.lat, prev.lng, next.lat, next.lng);
+  }
+  return total;
+}
+
 export interface CheckpointStatus {
   completedCount: number;
   currentTargetIndex: number;

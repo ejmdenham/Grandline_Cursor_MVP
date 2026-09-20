@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import type { Region } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRace } from '../contexts/RaceContext';
@@ -10,9 +10,15 @@ import { PreRaceContent } from '../components/bottom-sheet/PreRaceContent';
 import { RaceHUD } from '../components/RaceHUD';
 import { InRaceContent } from '../components/bottom-sheet/InRaceContent';
 import { PostRaceContent } from '../components/bottom-sheet/PostRaceContent';
+import { RecenterFab } from '../components/map/RecenterFab';
+import { CheckpointToast } from '../components/map/CheckpointToast';
+import { FinishMarker, GateMarker, YouMarker } from '../components/map/RaceMarkers';
 import { subscribeToLocation, getCurrentPositionOnce } from '../services/location';
 import { getCheckpointStatus } from '../services/checkpointDetection';
 import { markers } from '../config/assets';
+import { color, motion } from '../theme/tokens';
+import { gateLabel } from '../theme/format';
+import type { InstrumentStatus } from '../components/ui/StatusChip';
 
 const DEFAULT_REGION: Region = {
   latitude: 59.3293,
@@ -21,10 +27,7 @@ const DEFAULT_REGION: Region = {
   longitudeDelta: 0.05,
 };
 
-/** Compute initial region to include all checkpoints with padding, or default. */
-function regionForCheckpoints(
-  checkpoints: { lat: number; lng: number }[]
-): Region {
+function regionForCheckpoints(checkpoints: { lat: number; lng: number }[]): Region {
   if (!checkpoints?.length) return DEFAULT_REGION;
   const lats = checkpoints.map((c) => c.lat);
   const lngs = checkpoints.map((c) => c.lng);
@@ -32,13 +35,11 @@ function regionForCheckpoints(
   const maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs);
   const maxLng = Math.max(...lngs);
-  const latDelta = Math.max((maxLat - minLat) * 1.4, 0.02);
-  const lngDelta = Math.max((maxLng - minLng) * 1.4, 0.02);
   return {
     latitude: (minLat + maxLat) / 2,
     longitude: (minLng + maxLng) / 2,
-    latitudeDelta: latDelta,
-    longitudeDelta: lngDelta,
+    latitudeDelta: Math.max((maxLat - minLat) * 1.4, 0.02),
+    longitudeDelta: Math.max((maxLng - minLng) * 1.4, 0.02),
   };
 }
 
@@ -49,6 +50,10 @@ function regionAroundUser(lat: number, lng: number): Region {
     latitudeDelta: 0.005,
     longitudeDelta: 0.005,
   };
+}
+
+function toCoords(points: { lat: number; lng: number }[]) {
+  return points.map((point) => ({ latitude: point.lat, longitude: point.lng }));
 }
 
 export function MapScreen() {
@@ -73,35 +78,35 @@ export function MapScreen() {
   );
 
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [checkpointStatus, setCheckpointStatus] = useState<{
-    currentTargetIndex: number;
-    distanceToNextMeters: number;
-    lastCompletedMessage: string | null;
-  }>({ currentTargetIndex: 0, distanceToNextMeters: 0, lastCompletedMessage: null });
+  const [checkpointStatus, setCheckpointStatus] = useState({
+    currentTargetIndex: 0,
+    distanceToNextMeters: 0,
+    lastCompletedMessage: null as string | null,
+  });
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [splitMs, setSplitMs] = useState(0);
+  const [toast, setToast] = useState<{ title: string; body: string } | null>(null);
   const hasCenteredOnUser = useRef(false);
   const completedCountRef = useRef(completedCheckpointCount);
+  const lastGateAtRef = useRef<number | null>(null);
+  const lastMessageRef = useRef<string | null>(null);
   completedCountRef.current = completedCheckpointCount;
 
   const isInRace = raceState === 'in-race';
+  const currentTargetIndex = isInRace ? checkpointStatus.currentTargetIndex : 0;
 
-  // When Map is focused and not in race: fetch location once, set marker, center map
   useFocusEffect(
     useCallback(() => {
       if (isInRace) return;
       getCurrentPositionOnce().then((coords) => {
         if (coords) {
           setUserLocation({ lat: coords.lat, lng: coords.lng });
-          mapRef.current?.animateToRegion(
-            regionAroundUser(coords.lat, coords.lng),
-            500
-          );
+          mapRef.current?.animateToRegion(regionAroundUser(coords.lat, coords.lng), 500);
         }
       });
     }, [isInRace])
   );
 
-  // Location subscription when in-race
   useEffect(() => {
     if (!isInRace || !currentRace) return;
     const cleanup = subscribeToLocation((coords) => {
@@ -114,36 +119,71 @@ export function MapScreen() {
         currentCompleted
       );
       if (status.completedCount > currentCompleted) {
+        const justHit = checkpoints[currentCompleted];
         setCompletedCheckpointCount(status.completedCount);
+        lastGateAtRef.current = Date.now();
+        if (justHit) {
+          setToast({
+            title: `Checkpoint ${justHit.order}`,
+            body: 'Marked. Keep moving.',
+          });
+        }
         if (status.completedCount >= checkpoints.length && raceStartTime != null) {
           setRaceFinishTimeMs(Date.now() - raceStartTime);
           setRaceState('post-race');
         }
       }
+      if (status.completedCount > currentCompleted) {
+        lastMessageRef.current = `Checkpoint ${checkpoints[currentCompleted]?.order} marked`;
+      }
       setCheckpointStatus({
         currentTargetIndex: status.currentTargetIndex,
         distanceToNextMeters: status.distanceToNextMeters,
-        lastCompletedMessage: status.lastCompletedMessage,
+        lastCompletedMessage: lastMessageRef.current,
       });
     });
     return cleanup;
-  }, [isInRace, currentRace?.id, checkpoints, raceStartTime, setCompletedCheckpointCount, setRaceState, setRaceFinishTimeMs]);
+  }, [
+    isInRace,
+    currentRace?.id,
+    checkpoints,
+    raceStartTime,
+    setCompletedCheckpointCount,
+    setRaceState,
+    setRaceFinishTimeMs,
+  ]);
 
   useEffect(() => {
-    if (!isInRace) hasCenteredOnUser.current = false;
+    if (!toast) return;
+    const hold = motion.toastIn + motion.toastHold + motion.toastOut;
+    const id = setTimeout(() => setToast(null), hold);
+    return () => clearTimeout(id);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!isInRace) {
+      lastMessageRef.current = null;
+      hasCenteredOnUser.current = false;
+      return;
+    }
+    lastMessageRef.current = null;
+    lastGateAtRef.current = Date.now();
   }, [isInRace]);
 
-  // Center map on user on first location fix when in-race
   useEffect(() => {
     if (!isInRace || !userLocation || hasCenteredOnUser.current) return;
     hasCenteredOnUser.current = true;
+    lastGateAtRef.current = Date.now();
     mapRef.current?.animateToRegion(regionAroundUser(userLocation.lat, userLocation.lng), 500);
   }, [isInRace, userLocation]);
 
-  // Elapsed time ticker when in-race
   useEffect(() => {
     if (!isInRace || raceStartTime == null) return;
-    const tick = () => setElapsedMs(Date.now() - raceStartTime);
+    const tick = () => {
+      const now = Date.now();
+      setElapsedMs(now - raceStartTime);
+      setSplitMs(now - (lastGateAtRef.current ?? raceStartTime));
+    };
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
@@ -158,9 +198,27 @@ export function MapScreen() {
     }
   }, [userLocation]);
 
-  const totalCheckpoints = checkpoints.length;
-  const currentTargetIndex = isInRace ? checkpointStatus.currentTargetIndex : 0;
-  const displayProgressIndex = isInRace ? Math.min(currentTargetIndex, totalCheckpoints) : 0;
+  const hudStatus: InstrumentStatus | null = !hasRace
+    ? null
+    : raceState === 'pre-race'
+      ? 'waiting'
+      : raceState === 'in-race'
+        ? 'live'
+        : raceState === 'post-race'
+          ? 'done'
+          : null;
+
+  const hudElapsed =
+    raceState === 'post-race' && raceFinishTimeMs != null ? raceFinishTimeMs : elapsedMs;
+
+  const completedPath = toCoords(checkpoints.slice(0, Math.max(completedCheckpointCount, 0)));
+  const remainingStart = Math.max(completedCheckpointCount - 1, 0);
+  const remainingPath = toCoords(checkpoints.slice(remainingStart));
+
+  const target = checkpoints[currentTargetIndex];
+  const currentGateName = target
+    ? gateLabel(target.order, currentTargetIndex === checkpoints.length - 1)
+    : '—';
 
   return (
     <View style={styles.container}>
@@ -172,75 +230,105 @@ export function MapScreen() {
         mapType="standard"
         rotateEnabled={false}
       >
+        {completedPath.length >= 2 ? (
+          <Polyline coordinates={completedPath} strokeColor={color.mark} strokeWidth={4} />
+        ) : null}
+        {remainingPath.length >= 2 ? (
+          <Polyline
+            coordinates={remainingPath}
+            strokeColor={color.ember}
+            strokeWidth={4}
+            lineDashPattern={[8, 6]}
+          />
+        ) : null}
         {checkpoints.map((cp, index) => {
           const isLast = index === checkpoints.length - 1;
-          const isCompleted = isInRace && index < completedCheckpointCount;
-          const isCurrentTarget = isInRace && index === currentTargetIndex;
-          const showAsFinish = isLast && isCurrentTarget;
+          const isCompleted = (isInRace || raceState === 'post-race') && index < completedCheckpointCount;
+          const isCurrentTarget = index === currentTargetIndex && raceState !== 'post-race';
+          const image = isLast ? markers.finish : markers.checkpoint;
           return (
             <Marker
               key={`${cp.lat}-${cp.lng}-${cp.order}`}
               coordinate={{ latitude: cp.lat, longitude: cp.lng }}
-              title={showAsFinish ? 'Finish' : `Checkpoint ${cp.order}`}
-              opacity={isCompleted ? 0.5 : 1}
-              pinColor={isCurrentTarget ? '#0066cc' : undefined}
-            />
+              title={isLast ? 'Finish' : `Checkpoint ${cp.order}`}
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={false}
+              {...(image != null ? { image } : {})}
+            >
+              {image == null ? (
+                isCompleted ? (
+                  <GateMarker kind="done" />
+                ) : isLast ? (
+                  <FinishMarker />
+                ) : (
+                  <GateMarker
+                    kind={isCurrentTarget ? 'next' : 'open'}
+                    label={String(cp.order)}
+                  />
+                )
+              ) : null}
+            </Marker>
           );
         })}
         {userLocation ? (
           <Marker
             coordinate={{ latitude: userLocation.lat, longitude: userLocation.lng }}
             title="You"
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={isInRace && markers.user == null}
             {...(markers.user != null ? { image: markers.user } : {})}
-          />
+          >
+            {markers.user == null ? <YouMarker live={isInRace} /> : null}
+          </Marker>
         ) : null}
       </MapView>
 
-      {hasRace && raceState === 'pre-race' ? (
-        <View style={[styles.overlay, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
-          <View style={styles.overlayContent}>
-            <Text style={styles.raceName} numberOfLines={1}>
-              {currentRace.name}
-            </Text>
-            <Text style={styles.elapsed}>0:00</Text>
-            <Text style={styles.progress}>
-              Checkpoint 0 / {checkpoints.length}
-            </Text>
-          </View>
+      <RaceHUD
+        raceName={currentRace?.name}
+        elapsedMs={hasRace ? hudElapsed : 0}
+        status={hudStatus}
+        completedCount={hasRace ? completedCheckpointCount : 0}
+        currentTargetIndex={hasRace ? currentTargetIndex : 0}
+        totalCheckpoints={checkpoints.length}
+        topInset={insets.top}
+      />
+
+      {toast ? (
+        <View style={styles.toastWrap} pointerEvents="none">
+          <CheckpointToast title={toast.title} body={toast.body} />
         </View>
       ) : null}
 
       {hasRace && isInRace ? (
-        <RaceHUD
-          raceName={currentRace.name}
-          elapsedMs={elapsedMs}
-          currentCheckpointIndex={displayProgressIndex}
-          totalCheckpoints={totalCheckpoints}
-          insets={insets}
-        />
+        <View style={styles.fabWrap}>
+          <RecenterFab onPress={handleCenterMap} />
+        </View>
       ) : null}
 
       {hasRace && raceState === 'pre-race' ? (
-        <BottomSheet peekLabel={currentRace.name}>
+        <BottomSheet peekLabel={currentRace.name} expandedHeight={260}>
           <PreRaceContent race={currentRace} />
         </BottomSheet>
       ) : null}
 
       {hasRace && isInRace ? (
-        <BottomSheet peekLabel={currentRace.name}>
+        <BottomSheet peekLabel={currentRace.name} expandedHeight={220}>
           <InRaceContent
             distanceToNextMeters={userLocation ? checkpointStatus.distanceToNextMeters : null}
+            splitMs={splitMs}
+            gateName={currentGateName}
             lastCompletedMessage={checkpointStatus.lastCompletedMessage}
-            onCenterMap={handleCenterMap}
+            completedCount={completedCheckpointCount}
+            currentTargetIndex={currentTargetIndex}
+            totalCheckpoints={checkpoints.length}
           />
         </BottomSheet>
       ) : null}
 
       {hasRace && raceState === 'post-race' && raceFinishTimeMs != null ? (
-        <BottomSheet peekLabel={currentRace.name}>
+        <BottomSheet peekLabel={currentRace.name} expandedHeight={240}>
           <PostRaceContent
             finishTimeMs={raceFinishTimeMs}
-            raceName={currentRace.name}
             raceId={currentRace.id}
           />
         </BottomSheet>
@@ -252,37 +340,22 @@ export function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: color.mapLand,
   },
   map: {
     width: '100%',
     height: '100%',
   },
-  overlay: {
+  toastWrap: {
     position: 'absolute',
-    top: 0,
+    top: '38%',
     left: 0,
     right: 0,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
+    alignItems: 'center',
   },
-  overlayContent: {
-    gap: 4,
-  },
-  raceName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111',
-  },
-  elapsed: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#333',
-  },
-  progress: {
-    fontSize: 14,
-    color: '#666',
+  fabWrap: {
+    position: 'absolute',
+    right: 16,
+    bottom: 236,
   },
 });

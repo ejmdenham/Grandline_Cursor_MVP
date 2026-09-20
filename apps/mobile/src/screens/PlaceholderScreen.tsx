@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { DrawerScreenProps } from '@react-navigation/drawer';
 import type { MainDrawerParamList } from '../navigation/types';
+import { color, type } from '../theme/tokens';
 
 type PlaceholderRouteName = 'Profile' | 'ActiveRace' | 'Leaderboard' | 'JoinRace' | 'RulesSafety' | 'Placeholder';
 type Props = DrawerScreenProps<MainDrawerParamList, PlaceholderRouteName>;
@@ -12,7 +13,7 @@ export function PlaceholderScreen({ route }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>{title}</Text>
-      <Text style={styles.subtext}>Phase 3+</Text>
+      <Text style={styles.subtext}>Not in this phase.</Text>
     </View>
   );
 }
@@ -23,15 +24,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: '#fff',
+    backgroundColor: color.sand,
   },
   text: {
-    fontSize: 20,
-    fontWeight: '600',
+    ...type.title,
+    color: color.ink,
     marginBottom: 8,
   },
   subtext: {
-    fontSize: 14,
-    color: '#666',
+    ...type.caption,
+    color: color.stone,
   },
 });

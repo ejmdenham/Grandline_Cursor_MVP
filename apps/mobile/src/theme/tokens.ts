@@ -116,12 +116,40 @@ export const motion = {
   pressIn: 80,
   pressOut: 160,
   focus: 120,
+  success: 180,
+  error: 160,
+  startRace: 280,
+  livePulse: 1600,
+  sheet: 280,
+  contentFade: 120,
+  contentDelay: 40,
+  finish: 420,
+  toastIn: 180,
+  toastHold: 900,
+  toastOut: 220,
 } as const;
 
 export const opacity = {
   hud: 0.82,
   sheet: 0.96,
   press: 0.88,
+  livePulseDim: 0.45,
+  youRing: 0.16,
+} as const;
+
+/** Convert #RRGGBB to rgba() for HUD/sheet glass. */
+export function withAlpha(hex: string, alpha: number): string {
+  const raw = hex.replace('#', '');
+  const r = parseInt(raw.slice(0, 2), 16);
+  const g = parseInt(raw.slice(2, 4), 16);
+  const b = parseInt(raw.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export const surface = {
+  hud: withAlpha(color.paper, opacity.hud),
+  sheet: withAlpha(color.paper, opacity.sheet),
+  shadow: withAlpha(color.ink, 0.12),
 } as const;
 
 export const tokens = {
@@ -137,4 +165,6 @@ export const tokens = {
   easeGrandline,
   motion,
   opacity,
+  surface,
+  withAlpha,
 } as const;

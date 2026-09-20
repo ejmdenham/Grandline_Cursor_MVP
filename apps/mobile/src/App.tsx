@@ -10,7 +10,7 @@ export default function App() {
       <RaceProvider>
         <NavigationContainer>
           <RootNavigator />
-          <StatusBar style="auto" />
+          <StatusBar style="dark" />
         </NavigationContainer>
       </RaceProvider>
     </AuthProvider>
