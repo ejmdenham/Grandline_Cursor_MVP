@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Grandline Races API
-  description: Phase 1 races endpoints. Auth via Cognito JWT (Bearer token).
-  version: 0.1.0
+  description: Phase 1 races endpoints plus Phase 6 leaderboard and participation. Auth via Cognito JWT (Bearer token).
+  version: 0.2.0
 
 servers:
   - url: https://{apiId}.execute-api.{region}.amazonaws.com
@@ -58,6 +58,60 @@ paths:
           description: Missing or invalid token
         '404':
           description: No race with that id
+
+  /races/{id}/leaderboard:
+    get:
+      summary: Get race leaderboard
+      operationId: getRaceLeaderboard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Race found. entries may be empty.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+        '401':
+          description: Missing or invalid token
+        '404':
+          description: No race with that id
+
+  /races/{id}/participation:
+    put:
+      summary: Upsert the caller's race participation
+      operationId: putRaceParticipation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipationRequest'
+      responses:
+        '200':
+          description: Participation upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipationResponse'
+        '400':
+          description: Invalid body
+        '401':
+          description: Missing or invalid token
+        '404':
+          description: No race with that id
+        '409':
+          description: Finished participation cannot return to in_progress
 
 components:
   securitySchemes:
@@ -115,3 +169,74 @@ components:
         organizer_id:
           type: string
           nullable: true
+
+    LeaderboardResponse:
+      type: object
+      required:
+        - race_id
+        - race_name
+        - entries
+      properties:
+        race_id:
+          type: string
+        race_name:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+
+    LeaderboardEntry:
+      type: object
+      required:
+        - user_id
+        - name
+        - status
+      properties:
+        user_id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [finished, in_progress, dnf]
+        finish_time_ms:
+          type: integer
+          description: Elapsed milliseconds; only when status is finished
+        placement:
+          type: integer
+          description: 1-based place; only when status is finished
+
+    ParticipationRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [in_progress, finished]
+        finish_time_ms:
+          type: integer
+          minimum: 1
+          maximum: 86400000
+          exclusiveMaximum: true
+          description: Required when status is finished. Client-reported elapsed ms.
+
+    ParticipationResponse:
+      type: object
+      required:
+        - race_id
+        - user_id
+        - status
+      properties:
+        race_id:
+          type: string
+        user_id:
+          type: string
+        status:
+          type: string
+          enum: [in_progress, finished]
+        finish_time_ms:
+          type: integer
+        placement:
+          type: integer

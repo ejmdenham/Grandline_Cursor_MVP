@@ -232,6 +232,8 @@ Response:
 { "finishTime": "ISO", "rank": 5 }
 ```
 
+**Phase 6 MVP note:** The shipped player API does not implement this full verify-on-server contract. Checkpoint detection stays on-device (Phase 5). Finish is `PUT /races/{id}/participation` with client-reported `finish_time_ms`. Server-side GPS verification remains post-MVP. See `docs/api/races.md` and `docs/data-model.md`.
+
 ---
 
 ## SECTION 7 — DynamoDB Data Model

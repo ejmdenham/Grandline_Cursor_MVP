@@ -1,59 +1,35 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { BrandMark } from "@/components/BrandMark";
 
 export default function Layout() {
   const { signOut } = useAuth();
   const location = useLocation();
+  const racesActive = location.pathname.startsWith("/races");
+  const usersActive = location.pathname.startsWith("/users");
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      <aside
-        style={{
-          width: "200px",
-          background: "#1a1a1a",
-          color: "#fff",
-          padding: "1rem 0",
-        }}
-      >
-        <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-          <Link
-            to="/races"
-            style={{
-              padding: "0.5rem 1rem",
-              color: location.pathname.startsWith("/races") ? "#4fc3f7" : "#ccc",
-              textDecoration: "none",
-            }}
-          >
+    <div className="admin-shell">
+      <aside className="admin-sidebar">
+        <BrandMark />
+        <nav className="admin-sidebar__nav" aria-label="Admin">
+          <Link to="/races" className={`nav-link${racesActive ? " is-active" : ""}`}>
             Races
           </Link>
-          <Link
-            to="/users"
-            style={{
-              padding: "0.5rem 1rem",
-              color: location.pathname.startsWith("/users") ? "#4fc3f7" : "#ccc",
-              textDecoration: "none",
-            }}
-          >
+          <Link to="/users" className={`nav-link${usersActive ? " is-active" : ""}`}>
             Users
           </Link>
-          <button
-            type="button"
-            onClick={() => signOut()}
-            style={{
-              margin: "1rem 1rem 0",
-              padding: "0.5rem 1rem",
-              background: "transparent",
-              border: "1px solid #666",
-              color: "#ccc",
-              cursor: "pointer",
-            }}
-          >
-            Logout
-          </button>
         </nav>
+        <div className="admin-sidebar__foot">
+          <button type="button" className="btn-text flare" onClick={() => signOut()}>
+            Log out
+          </button>
+        </div>
       </aside>
-      <main style={{ flex: 1, padding: "1.5rem", background: "#f5f5f5" }}>
-        <Outlet />
+      <main className="admin-main">
+        <div className="admin-column">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

@@ -7,7 +7,7 @@ resource "aws_apigatewayv2_api" "main" {
 
   cors_configuration {
     allow_origins = ["*"]
-    allow_methods = ["GET", "OPTIONS"]
+    allow_methods = ["GET", "PUT", "OPTIONS"]
     allow_headers = ["Content-Type", "Authorization"]
   }
 }
@@ -42,6 +42,22 @@ resource "aws_apigatewayv2_route" "races_by_invite" {
 resource "aws_apigatewayv2_route" "races_by_id" {
   api_id             = aws_apigatewayv2_api.main.id
   route_key          = "GET /races/{id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+  target             = "integrations/${aws_apigatewayv2_integration.races.id}"
+}
+
+resource "aws_apigatewayv2_route" "races_leaderboard" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /races/{id}/leaderboard"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+  target             = "integrations/${aws_apigatewayv2_integration.races.id}"
+}
+
+resource "aws_apigatewayv2_route" "races_participation" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "PUT /races/{id}/participation"
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
   target             = "integrations/${aws_apigatewayv2_integration.races.id}"

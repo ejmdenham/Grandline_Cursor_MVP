@@ -33,12 +33,21 @@ export default function RaceEditPage() {
     if (isNew) return;
     const load = async () => {
       const token = await getIdToken();
-      if (!token) return;
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       try {
         const r = await fetchRace(id!, token);
         setRace(r);
       } catch (e) {
-        setError(e instanceof NotFoundError ? "Race not found" : e instanceof AdminRequiredError ? "Admin required" : (e as Error).message);
+        setError(
+          e instanceof NotFoundError
+            ? "Race not found"
+            : e instanceof AdminRequiredError
+              ? "Admin required"
+              : (e as Error).message
+        );
       } finally {
         setLoading(false);
       }
@@ -50,9 +59,6 @@ export default function RaceEditPage() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       const token = await getIdToken();
-      // #region agent log
-      fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:handleSubmit',message:'handleSubmit entry',data:{hasToken:!!token,isNew},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
       if (!token) {
         setError("No token—sign in required");
         return;
@@ -70,22 +76,13 @@ export default function RaceEditPage() {
           organizer_id: "organizer_id" in race ? race.organizer_id : undefined,
         };
         if (isNew) {
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-call',message:'calling createRace',data:{payloadKeys:Object.keys(payload)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
-          // #endregion
           const created = await createRace(payload, token);
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-success',message:'createRace succeeded',data:{createdId:created?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
-          // #endregion
           navigate(`/races/${created.id}/edit`, { replace: true });
         } else {
           await updateRace((race as Race).id, payload, token);
           setRace((prev) => ({ ...prev, ...payload }));
         }
       } catch (e) {
-        // #region agent log
-        fetch('http://127.0.0.1:7245/ingest/1dc5382b-28e7-4de1-8fe9-acee69028d25',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RaceEditPage.tsx:createRace-catch',message:'createRace threw',data:{errMsg:(e as Error).message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3,H4,H5'})}).catch(()=>{});
-        // #endregion
         setError((e as Error).message);
       } finally {
         setSaving(false);
@@ -98,60 +95,78 @@ export default function RaceEditPage() {
     setRace((prev) => ({ ...prev, [key]: value }));
   };
 
-  if (loading && !isNew) return <p>Loading…</p>;
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>{isNew ? "New race" : "Edit race"}</h1>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: "480px" }}>
-        <label>
-          Name
-          <input
-            type="text"
-            value={race.name}
-            onChange={(e) => setField("name", e.target.value)}
-            required
-            style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
-          />
-        </label>
-        <label>
-          Invite code
-          <input
-            type="text"
-            value={race.invite_code}
-            onChange={(e) => setField("invite_code", e.target.value)}
-            style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
-          />
-        </label>
-        <label>
-          Start window (e.g. ISO8601)
-          <input
-            type="text"
-            value={race.start_window}
-            onChange={(e) => setField("start_window", e.target.value)}
-            style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
-          />
-        </label>
-        <label>
-          AMOT (comma-separated, e.g. run,bike)
-          <input
-            type="text"
-            value={Array.isArray(race.amot) ? race.amot.join(",") : ""}
-            onChange={(e) => setField("amot", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
-            style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
-          />
-        </label>
-        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <input type="checkbox" checked={race.paid} onChange={(e) => setField("paid", e.target.checked)} />
-          Paid
-        </label>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button type="submit" disabled={saving}>
-            {saving ? "Saving…" : isNew ? "Create" : "Save"}
-          </button>
-          <Link to="/races">Cancel</Link>
+      <div className="page-toolbar">
+        <div className="page-toolbar__copy">
+          <h1>{isNew ? "New race" : "Edit race"}</h1>
+          <p>{isNew ? "Name the course and set the window." : "Keep the course timed and precise."}</p>
         </div>
-      </form>
+      </div>
+      {error ? <p className="page-status is-error">{error}</p> : null}
+      {loading && !isNew ? (
+        <p className="page-status">Loading…</p>
+      ) : (
+        <form className="admin-form" onSubmit={handleSubmit}>
+          <label className="field">
+            Name
+            <input
+              type="text"
+              value={race.name}
+              onChange={(e) => setField("name", e.target.value)}
+              required
+            />
+          </label>
+          <label className="field">
+            Invite code
+            <input
+              type="text"
+              value={race.invite_code}
+              onChange={(e) => setField("invite_code", e.target.value)}
+            />
+          </label>
+          <label className="field">
+            Start window (e.g. ISO8601)
+            <input
+              type="text"
+              value={race.start_window}
+              onChange={(e) => setField("start_window", e.target.value)}
+            />
+          </label>
+          <label className="field">
+            AMOT (comma-separated, e.g. run,bike)
+            <input
+              type="text"
+              value={Array.isArray(race.amot) ? race.amot.join(",") : ""}
+              onChange={(e) =>
+                setField(
+                  "amot",
+                  e.target.value
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                )
+              }
+            />
+          </label>
+          <label className="field-check">
+            <input
+              type="checkbox"
+              checked={race.paid}
+              onChange={(e) => setField("paid", e.target.checked)}
+            />
+            Paid
+          </label>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-ember" disabled={saving}>
+              {saving ? "Saving…" : isNew ? "Create race" : "Save"}
+            </button>
+            <Link to="/races" className="btn-text stone">
+              Cancel
+            </Link>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

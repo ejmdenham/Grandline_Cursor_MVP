@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { AuthStack } from './AuthStack';
 import { MainDrawer } from './MainDrawer';
 import type { RootStackParamList } from './types';
+import { color } from '../theme/tokens';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -14,7 +15,7 @@ export function RootNavigator() {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={color.ember} />
       </View>
     );
   }
@@ -35,6 +36,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: color.sand,
   },
 });

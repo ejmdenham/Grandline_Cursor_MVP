@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import {
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import * as auth from '../services/auth';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../navigation/types';
+import { AuthSheet } from '../components/ui/AuthSheet';
+import { Button } from '../components/ui/Button';
+import { Field } from '../components/ui/Field';
+import { PressableScale } from '../components/ui/PressableScale';
+import { color, type } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ConfirmSignUp'>;
 
@@ -22,17 +18,22 @@ export function ConfirmSignUpScreen({ route }: Props) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const handleConfirm = async () => {
-    if (!code.trim()) return;
+    if (!code.trim()) {
+      setError('Enter the code');
+      return;
+    }
     setLoading(true);
+    setError(null);
     try {
       await auth.confirmSignUp(email, code.trim());
       const session = await auth.signIn(email, password);
       setSession(session);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Confirmation failed';
-      Alert.alert('Confirmation failed', message);
+      setError(err instanceof Error ? err.message : 'Confirmation failed');
     } finally {
       setLoading(false);
     }
@@ -40,103 +41,52 @@ export function ConfirmSignUpScreen({ route }: Props) {
 
   const handleResend = async () => {
     setResending(true);
+    setNotice(null);
     try {
       await auth.resendConfirmationCode(email);
-      Alert.alert('Code sent', 'Check your email for a new code.');
+      setNotice('Code sent.');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Resend failed';
-      Alert.alert('Resend failed', message);
+      setError(err instanceof Error ? err.message : 'Resend failed');
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <Text style={styles.title}>Confirm your email</Text>
-      <Text style={styles.message}>We sent a code to {email}. Enter it below.</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Confirmation code (6 digits)"
+    <AuthSheet eyebrow="Enter the code.">
+      <Text style={styles.message}>Sent to {email}.</Text>
+      <Field
+        placeholder="Confirmation code"
         value={code}
         onChangeText={setCode}
         keyboardType="number-pad"
         maxLength={6}
         editable={!loading}
+        error={error}
       />
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleConfirm}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Confirm</Text>
-        )}
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.link}
-        onPress={handleResend}
-        disabled={loading || resending}
-      >
-        <Text style={styles.linkText}>
-          {resending ? 'Sending…' : 'Resend code'}
-        </Text>
-      </TouchableOpacity>
-    </KeyboardAvoidingView>
+      <Button label="Continue" kind="quiet" onPress={handleConfirm} loading={loading} />
+      <PressableScale onPress={handleResend} disabled={loading || resending}>
+        <Text style={styles.link}>{resending ? 'Sending…' : 'Resend code'}</Text>
+      </PressableScale>
+      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+    </AuthSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 24,
-  },
   message: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#000',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    ...type.caption,
+    color: color.stone,
   },
   link: {
-    marginTop: 24,
-    alignItems: 'center',
+    ...type.caption,
+    color: color.ember,
+    textAlign: 'center',
+    marginTop: 8,
   },
-  linkText: {
-    color: '#0066cc',
-    fontSize: 14,
+  notice: {
+    ...type.caption,
+    color: color.mark,
+    textAlign: 'center',
   },
 });

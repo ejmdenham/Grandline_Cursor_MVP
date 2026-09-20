@@ -1,49 +1,72 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-} from 'react-native';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, Pressable, Dimensions } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { color, inset, motion, radius, surface, type } from '../theme/tokens';
 
 const PEEK_HEIGHT = 48;
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const EXPANDED_HEIGHT = Math.min(SCREEN_HEIGHT * 0.45, 360);
+const DEFAULT_EXPANDED = Math.min(SCREEN_HEIGHT * 0.38, 300);
 
 interface BottomSheetProps {
   children: React.ReactNode;
-  /** Optional label shown in peek state (e.g. race name). */
   peekLabel?: string;
+  expandedHeight?: number;
 }
 
-export function BottomSheet({ children, peekLabel }: BottomSheetProps) {
-  const [expanded, setExpanded] = useState(true);
+export function BottomSheet({
+  children,
+  peekLabel,
+  expandedHeight = DEFAULT_EXPANDED,
+}: BottomSheetProps) {
+  const [expanded, setExpanded] = React.useState(true);
+  const height = useSharedValue(expandedHeight);
+  const contentFade = useSharedValue(1);
 
-  const toggle = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpanded((e) => !e);
-  };
+  useEffect(() => {
+    height.value = withSpring(expanded ? expandedHeight : PEEK_HEIGHT, {
+      stiffness: 380,
+      damping: 32,
+    });
+    contentFade.value = expanded
+      ? withDelay(
+          motion.contentDelay,
+          withTiming(1, {
+            duration: motion.contentFade,
+            easing: Easing.bezier(
+              motion.easeBezier[0],
+              motion.easeBezier[1],
+              motion.easeBezier[2],
+              motion.easeBezier[3]
+            ),
+          })
+        )
+      : withTiming(0, { duration: 80 });
+  }, [expanded, expandedHeight, contentFade, height]);
+
+  const sheetStyle = useAnimatedStyle(() => ({ height: height.value }));
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: contentFade.value }));
 
   return (
-    <View style={[styles.container, { height: expanded ? EXPANDED_HEIGHT : PEEK_HEIGHT }]}>
-      <TouchableOpacity style={styles.handle} onPress={toggle} activeOpacity={1}>
-        <View style={styles.handleBar} />
+    <Animated.View style={[styles.container, sheetStyle]}>
+      <Pressable style={styles.handle} onPress={() => setExpanded((value) => !value)}>
+        <Animated.View style={styles.handleBar} />
         {!expanded && peekLabel ? (
           <Text style={styles.peekLabel} numberOfLines={1}>
             {peekLabel}
           </Text>
         ) : null}
-      </TouchableOpacity>
-      {expanded ? <View style={styles.content}>{children}</View> : null}
-    </View>
+      </Pressable>
+      <Animated.View style={[styles.content, fadeStyle]} pointerEvents={expanded ? 'auto' : 'none'}>
+        {children}
+      </Animated.View>
+    </Animated.View>
   );
 }
 
@@ -53,14 +76,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
+    backgroundColor: surface.sheet,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    borderTopWidth: 1.5,
+    borderColor: color.dusk,
+    shadowColor: color.ink,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 12,
+    overflow: 'hidden',
   },
   handle: {
     height: PEEK_HEIGHT,
@@ -69,10 +95,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   handleBar: {
-    width: 40,
+    width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#ccc',
+    backgroundColor: color.dusk,
   },
   peekLabel: {
     position: 'absolute',
@@ -81,14 +107,13 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    ...type.action,
+    color: color.ink,
     lineHeight: PEEK_HEIGHT,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: inset.sheet,
     paddingBottom: 24,
   },
 });

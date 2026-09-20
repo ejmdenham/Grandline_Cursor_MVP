@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchAuthSession } from "aws-amplify/auth";
+import { AuthGate } from "@/components/AuthGate";
 
 export default function CallbackPage() {
   const navigate = useNavigate();
@@ -31,14 +32,15 @@ export default function CallbackPage() {
 
   if (error) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <p>{error}</p>
-        <button type="button" onClick={() => navigate("/")}>
-          Go to home
-        </button>
-      </div>
+      <AuthGate
+        title="Sign in failed"
+        body="The hosted UI did not complete."
+        error={error}
+        actionLabel="Go to home"
+        onAction={() => navigate("/")}
+      />
     );
   }
 
-  return <div style={{ padding: "2rem", textAlign: "center" }}>Signing in…</div>;
+  return <AuthGate title="Signing in…" body="Hold for the hosted UI to finish." />;
 }
